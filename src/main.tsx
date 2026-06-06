@@ -83,7 +83,6 @@ import {
   checkHasTrustDialogAccepted,
   getGlobalConfig,
   getRemoteControlAtStartup,
-  isAutoUpdaterDisabled,
   saveGlobalConfig,
 } from './utils/config.js';
 import { seedEarlyInput, stopCapturingEarlyInput } from './utils/earlyInput.js';
@@ -344,7 +343,6 @@ import { isInBundledMode, isRunningWithBun } from './utils/bundledMode.js';
 import { logForDiagnosticsNoPII } from './utils/diagLogs.js';
 import { filterExistingPaths, getKnownPathsForRepo } from './utils/githubRepoPathMapping.js';
 import { clearPluginCache, loadAllPluginsCacheOnly } from './utils/plugins/pluginLoader.js';
-import { migrateChangelogFromConfig } from './utils/releaseNotes.js';
 import { SandboxManager } from './utils/sandbox/sandbox-adapter.js';
 import { fetchSession, prepareApiRequest } from './utils/teleport/api.js';
 import {
@@ -461,7 +459,7 @@ async function logStartupTelemetry(): Promise<void> {
     sandbox_enabled: SandboxManager.isSandboxingEnabled(),
     are_unsandboxed_commands_allowed: SandboxManager.areUnsandboxedCommandsAllowed(),
     is_auto_bash_allowed_if_sandbox_enabled: SandboxManager.isAutoAllowBashIfSandboxedEnabled(),
-    auto_updater_disabled: isAutoUpdaterDisabled(),
+    auto_updater_disabled: true,
     prefers_reduced_motion: getInitialSettings().prefersReducedMotion ?? false,
     ...getCertEnvVarTelemetry(),
   });
@@ -492,10 +490,6 @@ function runMigrations(): void {
         : { ...prev, migrationVersion: CURRENT_MIGRATION_VERSION },
     );
   }
-  // Async migration - fire and forget since it's non-blocking
-  migrateChangelogFromConfig().catch(() => {
-    // Silently ignore migration errors - will retry on next startup
-  });
 }
 
 /**
@@ -1140,14 +1134,14 @@ async function run(): Promise<CommanderCommand> {
 
   program
     .name('claude')
-    .description(`Claude Code - starts an interactive session by default, use -p/--print for non-interactive output`)
-    .argument('[prompt]', 'Your prompt', String)
+    .description(`Claude Code - 默认启动交互式会话，使用 -p/--print 进入非交互式输出模式`)
+    .argument('[prompt]', '您的提示词', String)
     // Subcommands inherit helpOption via commander's copyInheritedSettings —
     // setting it once here covers mcp, plugin, auth, and all other subcommands.
-    .helpOption('-h, --help', 'Display help for command')
+    .helpOption('-h, --help', '显示命令帮助')
     .option(
       '-d, --debug [filter]',
-      'Enable debug mode with optional category filtering (e.g., "api,hooks" or "!1p,!file")',
+      '启用调试模式，可指定分类过滤（例如 "api,hooks" 或 "!1p,!file"）',
       (_value: string | true) => {
         // If value is provided, it will be the filter string
         // If not provided but flag is present, value will be true
@@ -1155,79 +1149,67 @@ async function run(): Promise<CommanderCommand> {
         return true;
       },
     )
-    .addOption(new Option('--debug-to-stderr', 'Enable debug mode (to stderr)').argParser(Boolean).hideHelp())
-    .option(
-      '--debug-file <path>',
-      'Write debug logs to a specific file path (implicitly enables debug mode)',
-      () => true,
-    )
-    .option('--verbose', 'Override verbose mode setting from config', () => true)
+    .addOption(new Option('--debug-to-stderr', '启用调试模式（输出到 stderr）').argParser(Boolean).hideHelp())
+    .option('--debug-file <path>', '将调试日志写入指定文件路径（隐式启用调试模式）', () => true)
+    .option('--verbose', '覆盖配置文件中的 verbose 模式设置', () => true)
     .option(
       '-p, --print',
-      'Print response and exit (useful for pipes). Note: The workspace trust dialog is skipped when Claude is run with the -p mode. Only use this flag in directories you trust.',
+      '打印响应后退出（适合管道场景）。注意：使用 -p 模式运行 Claude 时会跳过工作区信任对话框。仅在您信任的目录中使用此标志。',
       () => true,
     )
     .option(
       '--bare',
-      'Minimal mode: skip hooks, LSP, plugin sync, attribution, auto-memory, background prefetches, keychain reads, and CLAUDE.md auto-discovery. Sets CLAUDE_CODE_SIMPLE=1. Anthropic auth is strictly ANTHROPIC_API_KEY or apiKeyHelper via --settings (OAuth and keychain are never read). 3P providers (Bedrock/Vertex/Foundry) use their own credentials. Skills still resolve via /skill-name. Explicitly provide context via: --system-prompt[-file], --append-system-prompt[-file], --add-dir (CLAUDE.md dirs), --mcp-config, --settings, --agents, --plugin-dir.',
+      '极简模式：跳过 hooks、LSP、插件同步、attribution、自动记忆、后台预取、钥匙串读取与 CLAUDE.md 自动发现。设置 CLAUDE_CODE_SIMPLE=1。Anthropic 鉴权严格使用 ANTHROPIC_API_KEY 或通过 --settings 提供的 apiKeyHelper（不会读取 OAuth 或钥匙串）。第三方 provider（Bedrock/Vertex/Foundry）使用其自有凭据。技能仍可通过 /skill-name 解析。可通过以下参数显式提供上下文：--system-prompt[-file]、--append-system-prompt[-file]、--add-dir（CLAUDE.md 目录）、--mcp-config、--settings、--agents、--plugin-dir。',
       () => true,
     )
-    .addOption(new Option('--init', 'Run Setup hooks with init trigger, then continue').hideHelp())
-    .addOption(new Option('--init-only', 'Run Setup and SessionStart:startup hooks, then exit').hideHelp())
-    .addOption(new Option('--maintenance', 'Run Setup hooks with maintenance trigger, then continue').hideHelp())
+    .addOption(new Option('--init', '使用 init 触发器运行 Setup 钩子，然后继续').hideHelp())
+    .addOption(new Option('--init-only', '运行 Setup 和 SessionStart:startup 钩子，然后退出').hideHelp())
+    .addOption(new Option('--maintenance', '使用 maintenance 触发器运行 Setup 钩子，然后继续').hideHelp())
     .addOption(
       new Option(
         '--output-format <format>',
-        'Output format (only works with --print): "text" (default), "json" (single result), or "stream-json" (realtime streaming)',
+        '输出格式（仅与 --print 配合使用）："text"（默认）、"json"（单次结果）或 "stream-json"（实时流式）',
       ).choices(['text', 'json', 'stream-json']),
     )
     .addOption(
       new Option(
         '--json-schema <schema>',
-        'JSON Schema for structured output validation. ' +
-          'Example: {"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}',
+        '用于结构化输出校验的 JSON Schema。' +
+          '示例：{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}',
       ).argParser(String),
     )
     .option(
       '--include-hook-events',
-      'Include all hook lifecycle events in the output stream (only works with --output-format=stream-json)',
+      '在输出流中包含所有 hook 生命周期事件（仅与 --output-format=stream-json 配合使用）',
       () => true,
     )
     .option(
       '--include-partial-messages',
-      'Include partial message chunks as they arrive (only works with --print and --output-format=stream-json)',
+      '在消息片段到达时即刻输出（仅与 --print 和 --output-format=stream-json 配合使用）',
       () => true,
     )
     .addOption(
       new Option(
         '--input-format <format>',
-        'Input format (only works with --print): "text" (default), or "stream-json" (realtime streaming input)',
+        '输入格式（仅与 --print 配合使用）："text"（默认）或 "stream-json"（实时流式输入）',
       ).choices(['text', 'stream-json']),
     )
-    .option(
-      '--mcp-debug',
-      '[DEPRECATED. Use --debug instead] Enable MCP debug mode (shows MCP server errors)',
-      () => true,
-    )
-    .option(
-      '--dangerously-skip-permissions',
-      'Bypass all permission checks. Recommended only for sandboxes with no internet access.',
-      () => true,
-    )
+    .option('--mcp-debug', '[已废弃，请改用 --debug] 启用 MCP 调试模式（显示 MCP 服务器错误）', () => true)
+    .option('--dangerously-skip-permissions', '跳过所有权限检查。仅推荐在无网络访问的沙箱环境中使用。', () => true)
     .option(
       '--allow-dangerously-skip-permissions',
-      'Enable bypassing all permission checks as an option, without it being enabled by default. Recommended only for sandboxes with no internet access.',
+      '启用「跳过所有权限检查」选项作为可选项（默认不开启）。仅推荐在无网络访问的沙箱环境中使用。',
       () => true,
     )
     .addOption(
-      new Option('--thinking <mode>', 'Thinking mode: enabled (equivalent to adaptive), disabled')
+      new Option('--thinking <mode>', '思考模式：enabled（等同于 adaptive）、disabled')
         .choices(['enabled', 'adaptive', 'disabled'])
         .hideHelp(),
     )
     .addOption(
       new Option(
         '--max-thinking-tokens <tokens>',
-        '[DEPRECATED. Use --thinking instead for newer models] Maximum number of thinking tokens (only works with --print)',
+        '[已废弃，较新的模型请改用 --thinking] 思考 token 的最大数量（仅与 --print 配合使用）',
       )
         .argParser(Number)
         .hideHelp(),
@@ -1235,16 +1217,13 @@ async function run(): Promise<CommanderCommand> {
     .addOption(
       new Option(
         '--max-turns <turns>',
-        'Maximum number of agentic turns in non-interactive mode. This will early exit the conversation after the specified number of turns. (only works with --print)',
+        '非交互模式下 agentic 轮次的上限。达到指定轮数后将提前退出对话。（仅与 --print 配合使用）',
       )
         .argParser(Number)
         .hideHelp(),
     )
     .addOption(
-      new Option(
-        '--max-budget-usd <amount>',
-        'Maximum dollar amount to spend on API calls (only works with --print)',
-      ).argParser(value => {
+      new Option('--max-budget-usd <amount>', 'API 调用的最大美元预算（仅与 --print 配合使用）').argParser(value => {
         const amount = Number(value);
         if (isNaN(amount) || amount <= 0) {
           throw new Error('--max-budget-usd must be a positive number greater than 0');
@@ -1253,7 +1232,7 @@ async function run(): Promise<CommanderCommand> {
       }),
     )
     .addOption(
-      new Option('--task-budget <tokens>', 'API-side task budget in tokens (output_config.task_budget)')
+      new Option('--task-budget <tokens>', 'API 侧的任务 token 预算（output_config.task_budget）')
         .argParser(value => {
           const tokens = Number(value);
           if (isNaN(tokens) || tokens <= 0 || !Number.isInteger(tokens)) {
@@ -1265,69 +1244,51 @@ async function run(): Promise<CommanderCommand> {
     )
     .option(
       '--replay-user-messages',
-      'Re-emit user messages from stdin back on stdout for acknowledgment (only works with --input-format=stream-json and --output-format=stream-json)',
+      '将来自 stdin 的用户消息回放到 stdout 以便确认（仅与 --input-format=stream-json 和 --output-format=stream-json 配合使用）',
       () => true,
     )
-    .addOption(new Option('--enable-auth-status', 'Enable auth status messages in SDK mode').default(false).hideHelp())
+    .addOption(new Option('--enable-auth-status', '在 SDK 模式下启用鉴权状态消息').default(false).hideHelp())
     .option(
       '--allowedTools, --allowed-tools <tools...>',
-      'Comma or space-separated list of tool names to allow (e.g. "Bash(git:*) Edit")',
+      '允许使用的工具名称列表（逗号或空格分隔，例如 "Bash(git:*) Edit"）',
     )
     .option(
       '--tools <tools...>',
-      'Specify the list of available tools from the built-in set. Use "" to disable all tools, "default" to use all tools, or specify tool names (e.g. "Bash,Edit,Read").',
+      '从内置集合中指定可用工具列表。"" 表示禁用所有工具，"default" 表示使用全部工具，或指定具体工具名（如 "Bash,Edit,Read"）。',
     )
     .option(
       '--disallowedTools, --disallowed-tools <tools...>',
-      'Comma or space-separated list of tool names to deny (e.g. "Bash(git:*) Edit")',
+      '禁止使用的工具名称列表（逗号或空格分隔，例如 "Bash(git:*) Edit"）',
     )
-    .option('--mcp-config <configs...>', 'Load MCP servers from JSON files or strings (space-separated)')
+    .option('--mcp-config <configs...>', '从 JSON 文件或字符串加载 MCP 服务器（空格分隔）')
     .addOption(
-      new Option('--permission-prompt-tool <tool>', 'MCP tool to use for permission prompts (only works with --print)')
+      new Option('--permission-prompt-tool <tool>', '用于权限提示的 MCP 工具（仅与 --print 配合使用）')
         .argParser(String)
         .hideHelp(),
     )
-    .addOption(new Option('--system-prompt <prompt>', 'System prompt to use for the session').argParser(String))
-    .addOption(new Option('--system-prompt-file <file>', 'Read system prompt from a file').argParser(String).hideHelp())
+    .addOption(new Option('--system-prompt <prompt>', '本次会话使用的系统提示词').argParser(String))
+    .addOption(new Option('--system-prompt-file <file>', '从文件读取系统提示词').argParser(String).hideHelp())
+    .addOption(new Option('--append-system-prompt <prompt>', '在默认系统提示词后追加一段系统提示词').argParser(String))
     .addOption(
-      new Option('--append-system-prompt <prompt>', 'Append a system prompt to the default system prompt').argParser(
-        String,
-      ),
-    )
-    .addOption(
-      new Option(
-        '--append-system-prompt-file <file>',
-        'Read system prompt from a file and append to the default system prompt',
-      )
+      new Option('--append-system-prompt-file <file>', '从文件读取系统提示词并追加到默认系统提示词之后')
         .argParser(String)
         .hideHelp(),
     )
     .addOption(
-      new Option('--permission-mode <mode>', 'Permission mode to use for the session')
-        .argParser(String)
-        .choices(PERMISSION_MODES),
+      new Option('--permission-mode <mode>', '本次会话使用的权限模式').argParser(String).choices(PERMISSION_MODES),
     )
-    .option('-c, --continue', 'Continue the most recent conversation in the current directory', () => true)
-    .option(
-      '-r, --resume [value]',
-      'Resume a conversation by session ID, or open interactive picker with optional search term',
-      value => value || true,
-    )
+    .option('-c, --continue', '在当前目录继续最近的对话', () => true)
+    .option('-r, --resume [value]', '按会话 ID 恢复对话，或打开带可选搜索词的交互式选择器', value => value || true)
     .option(
       '--fork-session',
-      'When resuming, create a new session ID instead of reusing the original (use with --resume or --continue)',
+      '恢复时创建新的会话 ID 而不是复用原始 ID（与 --resume 或 --continue 配合使用）',
       () => true,
     )
-    .addOption(new Option('--prefill <text>', 'Pre-fill the prompt input with text without submitting it').hideHelp())
-    .addOption(new Option('--deep-link-origin', 'Signal that this session was launched from a deep link').hideHelp())
+    .addOption(new Option('--prefill <text>', '用指定文本预填提示输入框但不提交').hideHelp())
+    .addOption(new Option('--deep-link-origin', '标记本次会话由深链（deep link）启动').hideHelp())
+    .addOption(new Option('--deep-link-repo <slug>', '深链 ?repo= 参数解析到当前工作目录所对应的仓库 slug').hideHelp())
     .addOption(
-      new Option(
-        '--deep-link-repo <slug>',
-        'Repo slug the deep link ?repo= parameter resolved to the current cwd',
-      ).hideHelp(),
-    )
-    .addOption(
-      new Option('--deep-link-last-fetch <ms>', 'FETCH_HEAD mtime in epoch ms, precomputed by the deep link trampoline')
+      new Option('--deep-link-last-fetch <ms>', 'FETCH_HEAD 的 epoch 毫秒时间戳，由深链 trampoline 预计算')
         .argParser(v => {
           const n = Number(v);
           return Number.isFinite(n) ? n : undefined;
@@ -1336,17 +1297,14 @@ async function run(): Promise<CommanderCommand> {
     )
     .option(
       '--from-pr [value]',
-      'Resume a session linked to a PR by PR number/URL, or open interactive picker with optional search term',
+      '通过 PR 编号/URL 恢复与之关联的会话，或打开带可选搜索词的交互式选择器',
       value => value || true,
     )
-    .option(
-      '--no-session-persistence',
-      'Disable session persistence - sessions will not be saved to disk and cannot be resumed (only works with --print)',
-    )
+    .option('--no-session-persistence', '禁用会话持久化——会话不会保存到磁盘且无法恢复（仅与 --print 配合使用）')
     .addOption(
       new Option(
         '--resume-session-at <message id>',
-        'When resuming, only messages up to and including the assistant message with <message.id> (use with --resume in print mode)',
+        '恢复时仅加载至指定 <message.id> 的助手消息为止（与 --resume 在 print 模式下配合使用）',
       )
         .argParser(String)
         .hideHelp(),
@@ -1354,56 +1312,44 @@ async function run(): Promise<CommanderCommand> {
     .addOption(
       new Option(
         '--rewind-files <user-message-id>',
-        'Restore files to state at the specified user message and exit (requires --resume)',
+        '将文件恢复到指定用户消息时的状态后退出（需要 --resume）',
       ).hideHelp(),
     )
     // @[MODEL LAUNCH]: Update the example model ID in the --model help text.
     .option(
       '--model <model>',
-      `Model for the current session. Provide an alias for the latest model (e.g. 'sonnet' or 'opus') or a model's full name (e.g. 'claude-sonnet-4-6').`,
+      `本次会话使用的模型。可提供最新模型的别名（如 'sonnet' 或 'opus'），或模型全名（如 'claude-sonnet-4-6'）。`,
     )
     .addOption(
-      new Option('--effort <level>', `Effort level for the current session (low, medium, high, max)`).argParser(
-        (rawValue: string) => {
-          const value = rawValue.toLowerCase();
-          const allowed = ['low', 'medium', 'high', 'max'];
-          if (!allowed.includes(value)) {
-            throw new InvalidArgumentError(`It must be one of: ${allowed.join(', ')}`);
-          }
-          return value;
-        },
-      ),
+      new Option('--effort <level>', `本次会话的工作强度（low、medium、high、max）`).argParser((rawValue: string) => {
+        const value = rawValue.toLowerCase();
+        const allowed = ['low', 'medium', 'high', 'max'];
+        if (!allowed.includes(value)) {
+          throw new InvalidArgumentError(`It must be one of: ${allowed.join(', ')}`);
+        }
+        return value;
+      }),
     )
-    .option('--agent <agent>', `Agent for the current session. Overrides the 'agent' setting.`)
-    .option('--betas <betas...>', 'Beta headers to include in API requests (API key users only)')
-    .option(
-      '--fallback-model <model>',
-      'Enable automatic fallback to specified model when default model is overloaded (only works with --print)',
-    )
+    .option('--agent <agent>', `本次会话使用的 agent。覆盖 'agent' 设置。`)
+    .option('--betas <betas...>', 'API 请求中包含的 Beta 头（仅 API key 用户可用）')
+    .option('--fallback-model <model>', '当默认模型过载时自动回退到指定模型（仅与 --print 配合使用）')
     .addOption(
       new Option(
         '--workload <tag>',
-        'Workload tag for billing-header attribution (cc_workload). Process-scoped; set by SDK daemon callers that spawn subprocesses for cron work. (only works with --print)',
+        '用于账单头 attribution 的工作负载标签（cc_workload）。进程级；由 SDK 守护进程调用方为 cron 任务派生子进程时设置。（仅与 --print 配合使用）',
       ).hideHelp(),
     )
-    .option(
-      '--settings <file-or-json>',
-      'Path to a settings JSON file or a JSON string to load additional settings from',
-    )
-    .option('--add-dir <directories...>', 'Additional directories to allow tool access to')
-    .option('--ide', 'Automatically connect to IDE on startup if exactly one valid IDE is available', () => true)
-    .option(
-      '--strict-mcp-config',
-      'Only use MCP servers from --mcp-config, ignoring all other MCP configurations',
-      () => true,
-    )
-    .option('--session-id <uuid>', 'Use a specific session ID for the conversation (must be a valid UUID)')
-    .option('-n, --name <name>', 'Set a display name for this session (shown in /resume and terminal title)')
+    .option('--settings <file-or-json>', '用于加载附加设置的 settings JSON 文件路径或 JSON 字符串')
+    .option('--add-dir <directories...>', '允许工具访问的额外目录')
+    .option('--ide', '启动时若恰好有一个可用 IDE 则自动连接', () => true)
+    .option('--strict-mcp-config', '仅使用 --mcp-config 中指定的 MCP 服务器，忽略所有其他 MCP 配置', () => true)
+    .option('--session-id <uuid>', '为本次对话使用指定的会话 ID（必须为合法 UUID）')
+    .option('-n, --name <name>', '为本次会话设置显示名称（显示在 /resume 和终端标题中）')
     .option(
       '--agents <json>',
-      'JSON object defining custom agents (e.g. \'{"reviewer": {"description": "Reviews code", "prompt": "You are a code reviewer"}}\')',
+      '用于定义自定义 agent 的 JSON 对象（如 \'{"reviewer": {"description": "审查代码", "prompt": "You are a code reviewer"}}\'）',
     )
-    .option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).')
+    .option('--setting-sources <sources>', '要加载的设置来源列表（逗号分隔，可选 user、project、local）。')
     // gh-33508: <paths...> (variadic) consumed everything until the next
     // --flag. `claude --plugin-dir /path mcp add --transport http` swallowed
     // `mcp` and `add` as paths, then choked on --transport as an unknown
@@ -1411,16 +1357,16 @@ async function run(): Promise<CommanderCommand> {
     // --plugin-dir takes exactly one arg; repeat the flag for multiple dirs.
     .option(
       '--plugin-dir <path>',
-      'Load plugins from a directory for this session only (repeatable: --plugin-dir A --plugin-dir B)',
+      '仅在本次会话中从指定目录加载插件（可多次指定：--plugin-dir A --plugin-dir B）',
       (val: string, prev: string[]) => [...prev, val],
       [] as string[],
     )
-    .option('--disable-slash-commands', 'Disable all skills', () => true)
-    .option('--chrome', 'Enable Claude in Chrome integration')
-    .option('--no-chrome', 'Disable Claude in Chrome integration')
+    .option('--disable-slash-commands', '禁用所有技能', () => true)
+    .option('--chrome', '启用 Claude in Chrome 集成')
+    .option('--no-chrome', '禁用 Claude in Chrome 集成')
     .option(
       '--file <specs...>',
-      'File resources to download at startup. Format: file_id:relative_path (e.g., --file file_abc:doc.txt file_def:img.png)',
+      '启动时下载的文件资源。格式：file_id:相对路径（例如 --file file_abc:doc.txt file_def:img.png）',
     )
     .action(async (prompt, options) => {
       profileCheckpoint('action_handler_start');
@@ -4492,27 +4438,24 @@ async function run(): Promise<CommanderCommand> {
         );
       }
     })
-    .version(`${MACRO.VERSION} (Claude Code)`, '-v, --version', 'Output the version number');
+    .version(`${MACRO.VERSION} (Claude Code)`, '-v, --version', '输出版本号');
 
   // Worktree flags
-  program.option('-w, --worktree [name]', 'Create a new git worktree for this session (optionally specify a name)');
+  program.option('-w, --worktree [name]', '为本次会话创建一个新的 git worktree（可指定名称）');
   program.option(
     '--tmux',
-    'Create a tmux session for the worktree (requires --worktree). Uses iTerm2 native panes when available; use --tmux=classic for traditional tmux.',
+    '为 worktree 创建一个 tmux 会话（需要 --worktree）。可用时使用 iTerm2 原生面板；使用 --tmux=classic 启用传统 tmux。',
   );
 
   if (canUserConfigureAdvisor()) {
     program.addOption(
-      new Option(
-        '--advisor <model>',
-        'Enable the server-side advisor tool with the specified model (alias or full ID).',
-      ).hideHelp(),
+      new Option('--advisor <model>', '使用指定模型（别名或完整 ID）启用服务器端 advisor 工具。').hideHelp(),
     );
   }
 
   if (process.env.USER_TYPE === 'ant') {
     program.addOption(
-      new Option('--delegate-permissions', '[ANT-ONLY] Alias for --permission-mode auto.').implies({
+      new Option('--delegate-permissions', '[ANT-ONLY] --permission-mode auto 的别名。').implies({
         permissionMode: 'auto',
       }),
     );
@@ -4532,20 +4475,20 @@ async function run(): Promise<CommanderCommand> {
     program.addOption(
       new Option(
         '--tasks [id]',
-        '[ANT-ONLY] Tasks mode: watch for tasks and auto-process them. Optional id is used as both the task list ID and agent ID (defaults to "tasklist").',
+        '[ANT-ONLY] 任务模式：监听任务并自动处理。可选 id 同时作为任务列表 ID 和 agent ID（默认为 "tasklist"）。',
       )
         .argParser(String)
         .hideHelp(),
     );
-    program.option('--agent-teams', '[ANT-ONLY] Force Claude to use multi-agent mode for solving problems', () => true);
+    program.option('--agent-teams', '[ANT-ONLY] 强制 Claude 使用多 agent 模式解决问题', () => true);
   }
 
   if (feature('TRANSCRIPT_CLASSIFIER')) {
-    program.addOption(new Option('--enable-auto-mode', 'Opt in to auto mode').hideHelp());
+    program.addOption(new Option('--enable-auto-mode', '启用 auto mode').hideHelp());
   }
 
   if (feature('PROACTIVE') || feature('KAIROS')) {
-    program.addOption(new Option('--proactive', 'Start in proactive autonomous mode'));
+    program.addOption(new Option('--proactive', '以主动自主模式启动'));
   }
 
   if (feature('UDS_INBOX')) {
@@ -4647,15 +4590,15 @@ async function run(): Promise<CommanderCommand> {
 
   const mcp = program
     .command('mcp')
-    .description('Configure and manage MCP servers')
+    .description('配置和管理 MCP 服务器')
     .configureHelp(createSortedHelpConfig())
     .enablePositionalOptions();
 
   mcp
     .command('serve')
-    .description(`Start the Claude Code MCP server`)
-    .option('-d, --debug', 'Enable debug mode', () => true)
-    .option('--verbose', 'Override verbose mode setting from config', () => true)
+    .description(`启动 Claude Code MCP 服务器`)
+    .option('-d, --debug', '启用调试模式', () => true)
+    .option('--verbose', '覆盖配置文件中的 verbose 模式设置', () => true)
     .action(async ({ debug, verbose }: { debug?: boolean; verbose?: boolean }) => {
       const { mcpServeHandler } = await import('./cli/handlers/mcp.js');
       await mcpServeHandler({ debug, verbose });
@@ -4670,11 +4613,8 @@ async function run(): Promise<CommanderCommand> {
 
   mcp
     .command('remove <name>')
-    .description('Remove an MCP server')
-    .option(
-      '-s, --scope <scope>',
-      'Configuration scope (local, user, or project) - if not specified, removes from whichever scope it exists in',
-    )
+    .description('移除 MCP 服务器')
+    .option('-s, --scope <scope>', '配置作用域（local、user 或 project）——未指定时从存在的任一作用域中移除')
     .action(async (name: string, options: { scope?: string }) => {
       const { mcpRemoveHandler } = await import('./cli/handlers/mcp.js');
       await mcpRemoveHandler(name, options);
@@ -4683,7 +4623,7 @@ async function run(): Promise<CommanderCommand> {
   mcp
     .command('list')
     .description(
-      'List configured MCP servers. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.',
+      '列出已配置的 MCP 服务器。注意：将跳过工作区信任对话框，并会启动 .mcp.json 中的 stdio 服务器进行健康检查。仅在您信任的目录中执行此命令。',
     )
     .action(async () => {
       const { mcpListHandler } = await import('./cli/handlers/mcp.js');
@@ -4693,7 +4633,7 @@ async function run(): Promise<CommanderCommand> {
   mcp
     .command('get <name>')
     .description(
-      'Get details about an MCP server. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.',
+      '查看 MCP 服务器的详细信息。注意：将跳过工作区信任对话框，并会启动 .mcp.json 中的 stdio 服务器进行健康检查。仅在您信任的目录中执行此命令。',
     )
     .action(async (name: string) => {
       const { mcpGetHandler } = await import('./cli/handlers/mcp.js');
@@ -4702,9 +4642,9 @@ async function run(): Promise<CommanderCommand> {
 
   mcp
     .command('add-json <name> <json>')
-    .description('Add an MCP server (stdio or SSE) with a JSON string')
-    .option('-s, --scope <scope>', 'Configuration scope (local, user, or project)', 'local')
-    .option('--client-secret', 'Prompt for OAuth client secret (or set MCP_CLIENT_SECRET env var)')
+    .description('通过 JSON 字符串添加 MCP 服务器（stdio 或 SSE）')
+    .option('-s, --scope <scope>', '配置作用域（local、user 或 project）', 'local')
+    .option('--client-secret', '提示输入 OAuth 客户端密钥（或设置 MCP_CLIENT_SECRET 环境变量）')
     .action(async (name: string, json: string, options: { scope?: string; clientSecret?: true }) => {
       const { mcpAddJsonHandler } = await import('./cli/handlers/mcp.js');
       await mcpAddJsonHandler(name, json, options);
@@ -4712,8 +4652,8 @@ async function run(): Promise<CommanderCommand> {
 
   mcp
     .command('add-from-claude-desktop')
-    .description('Import MCP servers from Claude Desktop (Mac and WSL only)')
-    .option('-s, --scope <scope>', 'Configuration scope (local, user, or project)', 'local')
+    .description('从 Claude Desktop 导入 MCP 服务器（仅限 Mac 和 WSL）')
+    .option('-s, --scope <scope>', '配置作用域（local、user 或 project）', 'local')
     .action(async (options: { scope?: string }) => {
       const { mcpAddFromDesktopHandler } = await import('./cli/handlers/mcp.js');
       await mcpAddFromDesktopHandler(options);
@@ -4721,7 +4661,7 @@ async function run(): Promise<CommanderCommand> {
 
   mcp
     .command('reset-project-choices')
-    .description('Reset all approved and rejected project-scoped (.mcp.json) servers within this project')
+    .description('重置本项目内所有已批准和已拒绝的项目级（.mcp.json）服务器')
     .action(async () => {
       const { mcpResetChoicesHandler } = await import('./cli/handlers/mcp.js');
       await mcpResetChoicesHandler();
@@ -4731,14 +4671,14 @@ async function run(): Promise<CommanderCommand> {
   if (feature('DIRECT_CONNECT')) {
     program
       .command('server')
-      .description('Start a Claude Code session server')
-      .option('--port <number>', 'HTTP port', '0')
-      .option('--host <string>', 'Bind address', '0.0.0.0')
-      .option('--auth-token <token>', 'Bearer token for auth')
-      .option('--unix <path>', 'Listen on a unix domain socket')
-      .option('--workspace <dir>', 'Default working directory for sessions that do not specify cwd')
-      .option('--idle-timeout <ms>', 'Idle timeout for detached sessions in ms (0 = never expire)', '600000')
-      .option('--max-sessions <n>', 'Maximum concurrent sessions (0 = unlimited)', '32')
+      .description('启动 Claude Code 会话服务器')
+      .option('--port <number>', 'HTTP 端口', '0')
+      .option('--host <string>', '绑定地址', '0.0.0.0')
+      .option('--auth-token <token>', '用于鉴权的 Bearer 令牌')
+      .option('--unix <path>', '在 Unix domain socket 上监听')
+      .option('--workspace <dir>', '未指定 cwd 的会话的默认工作目录')
+      .option('--idle-timeout <ms>', '分离会话的空闲超时（毫秒，0 = 永不过期）', '600000')
+      .option('--max-sessions <n>', '最大并发会话数（0 = 不限）', '32')
       .action(
         async (opts: {
           port: string;
@@ -4819,20 +4759,17 @@ async function run(): Promise<CommanderCommand> {
     program
       .command('ssh <host> [dir]')
       .description(
-        'Run Claude Code on a remote host over SSH. Deploys the binary and ' +
-          'tunnels API auth back through your local machine — no remote setup needed.',
+        '通过 SSH 在远程主机上运行 Claude Code。自动部署二进制文件并经由本机回传 API 鉴权——无需在远程主机做任何配置。',
       )
-      .option('--permission-mode <mode>', 'Permission mode for the remote session')
-      .option('--dangerously-skip-permissions', 'Skip all permission prompts on the remote (dangerous)')
+      .option('--permission-mode <mode>', '远程会话的权限模式')
+      .option('--dangerously-skip-permissions', '跳过远程的所有权限提示（危险）')
       .option(
         '--remote-bin <command>',
-        'Custom remote binary command (skips probe/deploy). ' +
-          "Example: --remote-bin 'bun /path/to/project/dist/cli.js'",
+        '自定义远程二进制命令（跳过探测/部署）。' + "示例：--remote-bin 'bun /path/to/project/dist/cli.js'",
       )
       .option(
         '--local',
-        'e2e test mode — spawn the child CLI locally (skip ssh/deploy). ' +
-          'Exercises the auth proxy and unix-socket plumbing without a remote host.',
+        'e2e 测试模式——在本地派生子 CLI（跳过 ssh/部署）。' + '无需远程主机即可验证鉴权代理和 unix-socket 通道。',
       )
       .action(async () => {
         // Argv rewriting in main() should have consumed `ssh <host>` before
@@ -4854,9 +4791,9 @@ async function run(): Promise<CommanderCommand> {
   if (feature('DIRECT_CONNECT')) {
     program
       .command('open <cc-url>')
-      .description('Connect to a Claude Code server (internal — use cc:// URLs)')
-      .option('-p, --print [prompt]', 'Print mode (headless)')
-      .option('--output-format <format>', 'Output format: text, json, stream-json', 'text')
+      .description('连接到 Claude Code 服务器（内部使用——使用 cc:// URL）')
+      .option('-p, --print [prompt]', '打印模式（无头）')
+      .option('--output-format <format>', '输出格式：text、json、stream-json', 'text')
       .action(
         async (
           ccUrl: string,
@@ -4898,15 +4835,15 @@ async function run(): Promise<CommanderCommand> {
 
   // claude auth
 
-  const auth = program.command('auth').description('Manage authentication').configureHelp(createSortedHelpConfig());
+  const auth = program.command('auth').description('管理鉴权').configureHelp(createSortedHelpConfig());
 
   auth
     .command('login')
-    .description('Sign in to your Anthropic account')
-    .option('--email <email>', 'Pre-populate email address on the login page')
-    .option('--sso', 'Force SSO login flow')
-    .option('--console', 'Use Anthropic Console (API usage billing) instead of Claude subscription')
-    .option('--claudeai', 'Use Claude subscription (default)')
+    .description('登录您的 Anthropic 账户')
+    .option('--email <email>', '在登录页预填邮箱地址')
+    .option('--sso', '强制使用 SSO 登录流程')
+    .option('--console', '使用 Anthropic Console（按 API 用量计费），而非 Claude 订阅')
+    .option('--claudeai', '使用 Claude 订阅（默认）')
     .action(
       async ({
         email,
@@ -4926,9 +4863,9 @@ async function run(): Promise<CommanderCommand> {
 
   auth
     .command('status')
-    .description('Show authentication status')
-    .option('--json', 'Output as JSON (default)')
-    .option('--text', 'Output as human-readable text')
+    .description('显示鉴权状态')
+    .option('--json', '以 JSON 格式输出（默认）')
+    .option('--text', '以人类可读文本格式输出')
     .action(async (opts: { json?: boolean; text?: boolean }) => {
       const { authStatus } = await import('./cli/handlers/auth.js');
       await authStatus(opts);
@@ -4936,7 +4873,7 @@ async function run(): Promise<CommanderCommand> {
 
   auth
     .command('logout')
-    .description('Log out from your Anthropic account')
+    .description('登出您的 Anthropic 账户')
     .action(async () => {
       const { authLogout } = await import('./cli/handlers/auth.js');
       await authLogout();
@@ -4955,12 +4892,12 @@ async function run(): Promise<CommanderCommand> {
   const pluginCmd = program
     .command('plugin')
     .alias('plugins')
-    .description('Manage Claude Code plugins')
+    .description('管理 Claude Code 插件')
     .configureHelp(createSortedHelpConfig());
 
   pluginCmd
     .command('validate <path>')
-    .description('Validate a plugin or marketplace manifest')
+    .description('校验插件或插件市场的清单文件')
     .addOption(coworkOption())
     .action(async (manifestPath: string, options: { cowork?: boolean }) => {
       const { pluginValidateHandler } = await import('./cli/handlers/plugins.js');
@@ -4970,9 +4907,9 @@ async function run(): Promise<CommanderCommand> {
   // Plugin list command
   pluginCmd
     .command('list')
-    .description('List installed plugins')
-    .option('--json', 'Output as JSON')
-    .option('--available', 'Include available plugins from marketplaces (requires --json)')
+    .description('列出已安装的插件')
+    .option('--json', '以 JSON 格式输出')
+    .option('--available', '包含来自插件市场的可用插件（需要 --json）')
     .addOption(coworkOption())
     .action(async (options: { json?: boolean; available?: boolean; cowork?: boolean }) => {
       const { pluginListHandler } = await import('./cli/handlers/plugins.js');
@@ -4982,18 +4919,18 @@ async function run(): Promise<CommanderCommand> {
   // Marketplace subcommands
   const marketplaceCmd = pluginCmd
     .command('marketplace')
-    .description('Manage Claude Code marketplaces')
+    .description('管理 Claude Code 插件市场')
     .configureHelp(createSortedHelpConfig());
 
   marketplaceCmd
     .command('add <source>')
-    .description('Add a marketplace from a URL, path, or GitHub repo')
+    .description('从 URL、路径或 GitHub 仓库添加插件市场')
     .addOption(coworkOption())
     .option(
       '--sparse <paths...>',
-      'Limit checkout to specific directories via git sparse-checkout (for monorepos). Example: --sparse .claude-plugin plugins',
+      '通过 git sparse-checkout 限制只检出指定目录（用于 monorepo）。示例：--sparse .claude-plugin plugins',
     )
-    .option('--scope <scope>', 'Where to declare the marketplace: user (default), project, or local')
+    .option('--scope <scope>', '插件市场声明位置：user（默认）、project 或 local')
     .action(
       async (
         source: string,
@@ -5010,8 +4947,8 @@ async function run(): Promise<CommanderCommand> {
 
   marketplaceCmd
     .command('list')
-    .description('List all configured marketplaces')
-    .option('--json', 'Output as JSON')
+    .description('列出所有已配置的插件市场')
+    .option('--json', '以 JSON 格式输出')
     .addOption(coworkOption())
     .action(async (options: { json?: boolean; cowork?: boolean }) => {
       const { marketplaceListHandler } = await import('./cli/handlers/plugins.js');
@@ -5021,7 +4958,7 @@ async function run(): Promise<CommanderCommand> {
   marketplaceCmd
     .command('remove <name>')
     .alias('rm')
-    .description('Remove a configured marketplace')
+    .description('移除已配置的插件市场')
     .addOption(coworkOption())
     .action(async (name: string, options: { cowork?: boolean }) => {
       const { marketplaceRemoveHandler } = await import('./cli/handlers/plugins.js');
@@ -5030,7 +4967,7 @@ async function run(): Promise<CommanderCommand> {
 
   marketplaceCmd
     .command('update [name]')
-    .description('Update marketplace(s) from their source - updates all if no name specified')
+    .description('从数据源更新插件市场——未指定名称时更新全部')
     .addOption(coworkOption())
     .action(async (name: string | undefined, options: { cowork?: boolean }) => {
       const { marketplaceUpdateHandler } = await import('./cli/handlers/plugins.js');
@@ -5041,8 +4978,8 @@ async function run(): Promise<CommanderCommand> {
   pluginCmd
     .command('install <plugin>')
     .alias('i')
-    .description('Install a plugin from available marketplaces (use plugin@marketplace for specific marketplace)')
-    .option('-s, --scope <scope>', 'Installation scope: user, project, or local', 'user')
+    .description('从可用的插件市场安装插件（使用 plugin@marketplace 指定特定市场）')
+    .option('-s, --scope <scope>', '安装作用域：user、project 或 local', 'user')
     .addOption(coworkOption())
     .action(async (plugin: string, options: { scope?: string; cowork?: boolean }) => {
       const { pluginInstallHandler } = await import('./cli/handlers/plugins.js');
@@ -5054,9 +4991,9 @@ async function run(): Promise<CommanderCommand> {
     .command('uninstall <plugin>')
     .alias('remove')
     .alias('rm')
-    .description('Uninstall an installed plugin')
-    .option('-s, --scope <scope>', 'Uninstall from scope: user, project, or local', 'user')
-    .option('--keep-data', "Preserve the plugin's persistent data directory (~/.claude/plugins/data/{id}/)")
+    .description('卸载已安装的插件')
+    .option('-s, --scope <scope>', '从以下作用域卸载：user、project 或 local', 'user')
+    .option('--keep-data', '保留插件的持久化数据目录（~/.claude/plugins/data/{id}/）')
     .addOption(coworkOption())
     .action(
       async (
@@ -5075,8 +5012,8 @@ async function run(): Promise<CommanderCommand> {
   // Plugin enable command
   pluginCmd
     .command('enable <plugin>')
-    .description('Enable a disabled plugin')
-    .option('-s, --scope <scope>', `Installation scope: ${VALID_INSTALLABLE_SCOPES.join(', ')} (default: auto-detect)`)
+    .description('启用已禁用的插件')
+    .option('-s, --scope <scope>', `安装作用域：${VALID_INSTALLABLE_SCOPES.join('，')}（默认：自动检测）`)
     .addOption(coworkOption())
     .action(async (plugin: string, options: { scope?: string; cowork?: boolean }) => {
       const { pluginEnableHandler } = await import('./cli/handlers/plugins.js');
@@ -5086,9 +5023,9 @@ async function run(): Promise<CommanderCommand> {
   // Plugin disable command
   pluginCmd
     .command('disable [plugin]')
-    .description('Disable an enabled plugin')
-    .option('-a, --all', 'Disable all enabled plugins')
-    .option('-s, --scope <scope>', `Installation scope: ${VALID_INSTALLABLE_SCOPES.join(', ')} (default: auto-detect)`)
+    .description('禁用已启用的插件')
+    .option('-a, --all', '禁用所有已启用的插件')
+    .option('-s, --scope <scope>', `安装作用域：${VALID_INSTALLABLE_SCOPES.join('，')}（默认：自动检测）`)
     .addOption(coworkOption())
     .action(async (plugin: string | undefined, options: { scope?: string; cowork?: boolean; all?: boolean }) => {
       const { pluginDisableHandler } = await import('./cli/handlers/plugins.js');
@@ -5098,8 +5035,8 @@ async function run(): Promise<CommanderCommand> {
   // Plugin update command
   pluginCmd
     .command('update <plugin>')
-    .description('Update a plugin to the latest version (restart required to apply)')
-    .option('-s, --scope <scope>', `Installation scope: ${VALID_UPDATE_SCOPES.join(', ')} (default: user)`)
+    .description('将插件更新到最新版本（需要重启后生效）')
+    .option('-s, --scope <scope>', `安装作用域：${VALID_UPDATE_SCOPES.join('，')}（默认：user）`)
     .addOption(coworkOption())
     .action(async (plugin: string, options: { scope?: string; cowork?: boolean }) => {
       const { pluginUpdateHandler } = await import('./cli/handlers/plugins.js');
@@ -5110,7 +5047,7 @@ async function run(): Promise<CommanderCommand> {
   // Setup token command
   program
     .command('setup-token')
-    .description('Set up a long-lived authentication token (requires Claude subscription)')
+    .description('设置一个长期有效的鉴权令牌（需要 Claude 订阅）')
     .action(async () => {
       const [{ setupTokenHandler }, { createRoot }] = await Promise.all([
         import('./cli/handlers/util.js'),
@@ -5123,8 +5060,8 @@ async function run(): Promise<CommanderCommand> {
   // Agents command - list configured agents
   program
     .command('agents')
-    .description('List configured agents')
-    .option('--setting-sources <sources>', 'Comma-separated list of setting sources to load (user, project, local).')
+    .description('列出已配置的 agents')
+    .option('--setting-sources <sources>', '要加载的设置来源列表（逗号分隔，可选 user、project、local）。')
     .action(async () => {
       const { agentsHandler } = await import('./cli/handlers/agents.js');
       await agentsHandler();
@@ -5135,11 +5072,11 @@ async function run(): Promise<CommanderCommand> {
     // Skip when tengu_auto_mode_config.enabled === 'disabled' (circuit breaker).
     // Reads from disk cache — GrowthBook isn't initialized at registration time.
     if (getAutoModeEnabledStateIfCached() !== 'disabled') {
-      const autoModeCmd = program.command('auto-mode').description('Inspect auto mode classifier configuration');
+      const autoModeCmd = program.command('auto-mode').description('查看 auto mode 分类器配置');
 
       autoModeCmd
         .command('defaults')
-        .description('Print the default auto mode environment, allow, and deny rules as JSON')
+        .description('以 JSON 格式输出默认的 auto mode 环境、allow 和 deny 规则')
         .action(async () => {
           const { autoModeDefaultsHandler } = await import('./cli/handlers/autoMode.js');
           autoModeDefaultsHandler();
@@ -5148,7 +5085,7 @@ async function run(): Promise<CommanderCommand> {
 
       autoModeCmd
         .command('config')
-        .description('Print the effective auto mode config as JSON: your settings where set, defaults otherwise')
+        .description('以 JSON 格式输出实际生效的 auto mode 配置：已设置处用您的设置值，否则使用默认值')
         .action(async () => {
           const { autoModeConfigHandler } = await import('./cli/handlers/autoMode.js');
           autoModeConfigHandler();
@@ -5157,8 +5094,8 @@ async function run(): Promise<CommanderCommand> {
 
       autoModeCmd
         .command('critique')
-        .description('Get AI feedback on your custom auto mode rules')
-        .option('--model <model>', 'Override which model is used')
+        .description('针对您自定义的 auto mode 规则获取 AI 反馈')
+        .option('--model <model>', '覆盖所使用的模型')
         .action(async options => {
           const { autoModeCritiqueHandler } = await import('./cli/handlers/autoMode.js');
           await autoModeCritiqueHandler(options);
@@ -5169,12 +5106,12 @@ async function run(): Promise<CommanderCommand> {
 
   // claude autonomy — CLI subcommands mirroring /autonomy slash command
   {
-    const autonomyCmd = program.command('autonomy').description('Inspect and manage automatic autonomy runs and flows');
+    const autonomyCmd = program.command('autonomy').description('查看并管理 autonomy 自动运行与流程');
 
     autonomyCmd
       .command('status')
-      .description('Print autonomy run, flow, team, pipe, and remote-control status')
-      .option('--deep', 'Include teams, pipes, daemon, and remote-control sections')
+      .description('输出 autonomy 运行、流程、团队、管道和远程控制的状态')
+      .option('--deep', '包含 teams、pipes、daemon 和 remote-control 段')
       .action(async (options: { deep?: boolean }) => {
         const { autonomyStatusHandler } = await import('./cli/handlers/autonomy.js');
         await autonomyStatusHandler(options);
@@ -5183,7 +5120,7 @@ async function run(): Promise<CommanderCommand> {
 
     autonomyCmd
       .command('runs [limit]')
-      .description('List recent autonomy runs')
+      .description('列出最近的 autonomy 运行记录')
       .action(async (limit?: string) => {
         const { autonomyRunsHandler } = await import('./cli/handlers/autonomy.js');
         await autonomyRunsHandler(limit);
@@ -5192,7 +5129,7 @@ async function run(): Promise<CommanderCommand> {
 
     autonomyCmd
       .command('flows [limit]')
-      .description('List recent autonomy flows')
+      .description('列出最近的 autonomy 流程')
       .action(async (limit?: string) => {
         const { autonomyFlowsHandler } = await import('./cli/handlers/autonomy.js');
         await autonomyFlowsHandler(limit);
@@ -5201,7 +5138,7 @@ async function run(): Promise<CommanderCommand> {
 
     const flowCmd = autonomyCmd
       .command('flow <flowId>')
-      .description('Inspect a single autonomy flow')
+      .description('查看单个 autonomy 流程')
       .action(async (flowId: string) => {
         const { autonomyFlowHandler } = await import('./cli/handlers/autonomy.js');
         await autonomyFlowHandler(flowId);
@@ -5210,7 +5147,7 @@ async function run(): Promise<CommanderCommand> {
 
     flowCmd
       .command('cancel <flowId>')
-      .description('Cancel a queued, waiting, or running autonomy flow')
+      .description('取消已排队、等待中或运行中的 autonomy 流程')
       .action(async (flowId: string) => {
         const { autonomyFlowCancelHandler } = await import('./cli/handlers/autonomy.js');
         await autonomyFlowCancelHandler(flowId);
@@ -5219,7 +5156,7 @@ async function run(): Promise<CommanderCommand> {
 
     flowCmd
       .command('resume <flowId>')
-      .description('Resume a waiting autonomy flow')
+      .description('恢复等待中的 autonomy 流程')
       .action(async (flowId: string) => {
         const { autonomyFlowResumeHandler } = await import('./cli/handlers/autonomy.js');
         await autonomyFlowResumeHandler(flowId);
@@ -5239,7 +5176,7 @@ async function run(): Promise<CommanderCommand> {
     program
       .command('remote-control', { hidden: true })
       .alias('rc')
-      .description('Connect your local environment for remote-control sessions via claude.ai/code')
+      .description('通过 claude.ai/code 将本机环境接入远程控制会话')
       .action(async () => {
         // Unreachable — cli.tsx fast-path handles this command before main.tsx loads.
         // If somehow reached, delegate to bridgeMain.
@@ -5251,9 +5188,7 @@ async function run(): Promise<CommanderCommand> {
   if (feature('KAIROS')) {
     program
       .command('assistant [sessionId]')
-      .description(
-        'Attach the REPL as a client to a running bridge session. Discovers sessions via API if no sessionId given.',
-      )
+      .description('将 REPL 作为客户端接入正在运行的 bridge 会话。未指定 sessionId 时通过 API 自动发现可用会话。')
       .action(() => {
         // Argv rewriting above should have consumed `assistant [id]`
         // before commander runs. Reaching here means a root flag came first
@@ -5272,7 +5207,7 @@ async function run(): Promise<CommanderCommand> {
   program
     .command('doctor')
     .description(
-      'Check the health of your Claude Code auto-updater. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.',
+      '检查 Claude Code 安装的健康状态。注意：将跳过工作区信任对话框，并会启动 .mcp.json 中的 stdio 服务器进行健康检查。仅在您信任的目录中执行此命令。',
     )
     .action(async () => {
       const [{ doctorHandler }, { createRoot }] = await Promise.all([
@@ -5287,9 +5222,7 @@ async function run(): Promise<CommanderCommand> {
   if (process.env.USER_TYPE === 'ant') {
     program
       .command('up')
-      .description(
-        '[ANT-ONLY] Initialize or upgrade the local dev environment using the "# claude up" section of the nearest CLAUDE.md',
-      )
+      .description('[ANT-ONLY] 使用最近的 CLAUDE.md 中 "# claude up" 小节的指令初始化或升级本地开发环境')
       .action(async () => {
         const { up } = await import('src/cli/up.js');
         await up();
@@ -5322,27 +5255,6 @@ async function run(): Promise<CommanderCommand> {
       );
   }
 
-  // claude install
-  program
-    .command('install [target]')
-    .description(
-      'Install Claude Code native build. Use [target] to specify version (stable, latest, or specific version)',
-    )
-    .option('--force', 'Force installation even if already installed')
-    .action(async (target: string | undefined, options: { force?: boolean }) => {
-      const { installHandler } = await import('./cli/handlers/util.js');
-      await installHandler(target, options);
-    });
-
-  // claude update — update ccb to the latest version via npm or bun
-  program
-    .command('update')
-    .description('Update claude-code-best (ccb) to the latest version')
-    .action(async () => {
-      const { updateCCB } = await import('./cli/updateCCB.js');
-      await updateCCB();
-    });
-
   // ant-only commands
   if (process.env.USER_TYPE === 'ant') {
     const validateLogId = (value: string) => {
@@ -5353,12 +5265,8 @@ async function run(): Promise<CommanderCommand> {
     // claude log
     program
       .command('log')
-      .description('[ANT-ONLY] Manage conversation logs.')
-      .argument(
-        '[number|sessionId]',
-        'A number (0, 1, 2, etc.) to display a specific log, or the sesssion ID (uuid) of a log',
-        validateLogId,
-      )
+      .description('[ANT-ONLY] 管理对话日志。')
+      .argument('[number|sessionId]', '用于显示指定日志的数字（0、1、2 等），或日志的会话 ID（uuid）', validateLogId)
       .action(async (logId: string | number | undefined) => {
         const { logHandler } = await import('./cli/handlers/ant.js');
         await logHandler(logId);
@@ -5367,10 +5275,8 @@ async function run(): Promise<CommanderCommand> {
     // claude error
     program
       .command('error')
-      .description(
-        '[ANT-ONLY] View error logs. Optionally provide a number (0, -1, -2, etc.) to display a specific log.',
-      )
-      .argument('[number]', 'A number (0, 1, 2, etc.) to display a specific log', parseInt)
+      .description('[ANT-ONLY] 查看错误日志。可选提供数字（0、-1、-2 等）以显示指定日志。')
+      .argument('[number]', '用于显示指定日志的数字（0、1、2 等）', parseInt)
       .action(async (number: number | undefined) => {
         const { errorHandler } = await import('./cli/handlers/ant.js');
         await errorHandler(number);
@@ -5379,10 +5285,10 @@ async function run(): Promise<CommanderCommand> {
     // claude export
     program
       .command('export')
-      .description('[ANT-ONLY] Export a conversation to a text file.')
+      .description('[ANT-ONLY] 将对话导出为文本文件。')
       .usage('<source> <outputFile>')
-      .argument('<source>', 'Session ID, log index (0, 1, 2...), or path to a .json/.jsonl log file')
-      .argument('<outputFile>', 'Output file path for the exported text')
+      .argument('<source>', '会话 ID、日志索引（0、1、2...）或 .json/.jsonl 日志文件路径')
+      .argument('<outputFile>', '导出文本的输出文件路径')
       .addHelpText(
         'after',
         `
@@ -5398,13 +5304,13 @@ Examples:
       });
 
     if (process.env.USER_TYPE === 'ant') {
-      const taskCmd = program.command('task').description('[ANT-ONLY] Manage task list tasks');
+      const taskCmd = program.command('task').description('[ANT-ONLY] 管理任务清单中的任务');
 
       taskCmd
         .command('create <subject>')
-        .description('Create a new task')
-        .option('-d, --description <text>', 'Task description')
-        .option('-l, --list <id>', 'Task list ID (defaults to "tasklist")')
+        .description('创建新任务')
+        .option('-d, --description <text>', '任务描述')
+        .option('-l, --list <id>', '任务列表 ID（默认为 "tasklist"）')
         .action(async (subject: string, opts: { description?: string; list?: string }) => {
           const { taskCreateHandler } = await import('./cli/handlers/ant.js');
           await taskCreateHandler(subject, opts);
@@ -5412,10 +5318,10 @@ Examples:
 
       taskCmd
         .command('list')
-        .description('List all tasks')
-        .option('-l, --list <id>', 'Task list ID (defaults to "tasklist")')
-        .option('--pending', 'Show only pending tasks')
-        .option('--json', 'Output as JSON')
+        .description('列出所有任务')
+        .option('-l, --list <id>', '任务列表 ID（默认为 "tasklist"）')
+        .option('--pending', '仅显示待处理任务')
+        .option('--json', '以 JSON 格式输出')
         .action(async (opts: { list?: string; pending?: boolean; json?: boolean }) => {
           const { taskListHandler } = await import('./cli/handlers/ant.js');
           await taskListHandler(opts);
@@ -5423,8 +5329,8 @@ Examples:
 
       taskCmd
         .command('get <id>')
-        .description('Get details of a task')
-        .option('-l, --list <id>', 'Task list ID (defaults to "tasklist")')
+        .description('查看任务详情')
+        .option('-l, --list <id>', '任务列表 ID（默认为 "tasklist"）')
         .action(async (id: string, opts: { list?: string }) => {
           const { taskGetHandler } = await import('./cli/handlers/ant.js');
           await taskGetHandler(id, opts);
@@ -5432,13 +5338,13 @@ Examples:
 
       taskCmd
         .command('update <id>')
-        .description('Update a task')
-        .option('-l, --list <id>', 'Task list ID (defaults to "tasklist")')
-        .option('-s, --status <status>', `Set status (${TASK_STATUSES.join(', ')})`)
-        .option('--subject <text>', 'Update subject')
-        .option('-d, --description <text>', 'Update description')
-        .option('--owner <agentId>', 'Set owner')
-        .option('--clear-owner', 'Clear owner')
+        .description('更新任务')
+        .option('-l, --list <id>', '任务列表 ID（默认为 "tasklist"）')
+        .option('-s, --status <status>', `设置状态（${TASK_STATUSES.join('，')}）`)
+        .option('--subject <text>', '更新主题')
+        .option('-d, --description <text>', '更新描述')
+        .option('--owner <agentId>', '设置负责人')
+        .option('--clear-owner', '清除负责人')
         .action(
           async (
             id: string,
@@ -5458,8 +5364,8 @@ Examples:
 
       taskCmd
         .command('dir')
-        .description('Show the tasks directory path')
-        .option('-l, --list <id>', 'Task list ID (defaults to "tasklist")')
+        .description('显示任务目录路径')
+        .option('-l, --list <id>', '任务列表 ID（默认为 "tasklist"）')
         .action(async (opts: { list?: string }) => {
           const { taskDirHandler } = await import('./cli/handlers/ant.js');
           await taskDirHandler(opts);
@@ -5469,8 +5375,8 @@ Examples:
     // claude completion <shell>
     program
       .command('completion <shell>', { hidden: true })
-      .description('Generate shell completion script (bash, zsh, or fish)')
-      .option('--output <file>', 'Write completion script directly to a file instead of stdout')
+      .description('生成 shell 补全脚本（bash、zsh 或 fish）')
+      .option('--output <file>', '将补全脚本直接写入文件而非输出到 stdout')
       .action(async (shell: string, opts: { output?: string }) => {
         const { completionHandler } = await import('./cli/handlers/ant.js');
         await completionHandler(shell, opts, program);

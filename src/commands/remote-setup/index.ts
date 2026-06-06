@@ -5,8 +5,7 @@ import { isPolicyAllowed } from '../../services/policyLimits/index.js'
 const web = {
   type: 'local-jsx',
   name: 'web-setup',
-  description:
-    'Setup Claude Code on the web (requires connecting your GitHub account)',
+  description: '在 Web 上设置 Claude Code（需要连接 GitHub 账户）',
   availability: ['claude-ai'],
   isEnabled: () =>
     getFeatureValue_CACHED_MAY_BE_STALE('tengu_cobalt_lantern', false) &&

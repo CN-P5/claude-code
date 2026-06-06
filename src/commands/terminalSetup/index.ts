@@ -14,8 +14,8 @@ const terminalSetup = {
   name: 'terminal-setup',
   description:
     env.terminal === 'Apple_Terminal'
-      ? 'Enable Option+Enter key binding for newlines and visual bell'
-      : 'Install Shift+Enter key binding for newlines',
+      ? '为换行和可视响铃启用 Option+Enter 快捷键'
+      : '为换行安装 Shift+Enter 快捷键',
   isHidden: env.terminal !== null && env.terminal in NATIVE_CSIU_TERMINALS,
   load: () => import('./terminalSetup.js'),
 } satisfies Command

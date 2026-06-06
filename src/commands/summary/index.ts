@@ -1,5 +1,5 @@
 /**
- * /summary — Generate and display a session summary.
+ * /summary — 生成并显示会话摘要.
  *
  * Triggers a manual Session Memory extraction (bypassing automatic thresholds),
  * then reads and displays the updated summary.md file.
@@ -24,7 +24,7 @@ const call: LocalCommandCall = async (_args, context) => {
   )
 
   if (safeMessages.length === 0) {
-    return { type: 'text', value: 'No messages to summarize.' }
+    return { type: 'text', value: '没有可摘要的消息。' }
   }
 
   try {
@@ -69,7 +69,7 @@ const call: LocalCommandCall = async (_args, context) => {
 const summary = {
   type: 'local',
   name: 'summary',
-  description: 'Generate and display a session summary',
+  description: '生成并显示会话摘要',
   supportsNonInteractive: true,
   isHidden: false,
   load: () => Promise.resolve({ call }),

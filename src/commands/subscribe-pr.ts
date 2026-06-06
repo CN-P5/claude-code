@@ -70,8 +70,7 @@ async function parsePRArg(
     const detected = await detectCurrentRepositoryWithHost()
     if (!detected) {
       return {
-        error:
-          'Could not detect the GitHub repository for the current directory. Provide a full PR URL instead.',
+        error: '无法检测当前目录的 GitHub 仓库。请提供完整的 PR URL。',
       }
     }
     const repo = `${detected.owner}/${detected.name}`
@@ -79,7 +78,7 @@ async function parsePRArg(
   }
 
   return {
-    error: `Unrecognised PR reference: "${trimmed}". Expected a PR URL, owner/repo#123, or a PR number.`,
+    error: `无法识别的 PR 引用："${trimmed}"。请使用 PR URL、owner/repo#123 或 PR 编号。`,
   }
 }
 
@@ -92,8 +91,7 @@ const call: LocalCommandCall = async (args, _context) => {
     if (subs.length === 0) {
       return {
         type: 'text',
-        value:
-          'No active PR subscriptions. Usage: /subscribe-pr <pr-url-or-number>',
+        value: '没有活跃的 PR 订阅。用法：/subscribe-pr <pr-url-or-number>',
       }
     }
     const lines = subs.map(
@@ -101,7 +99,7 @@ const call: LocalCommandCall = async (args, _context) => {
     )
     return {
       type: 'text',
-      value: `Active PR subscriptions:\n${lines.join('\n')}`,
+      value: `活跃的 PR 订阅：\n${lines.join('\n')}`,
     }
   }
 
@@ -120,13 +118,13 @@ const call: LocalCommandCall = async (args, _context) => {
     if (after.length === before) {
       return {
         type: 'text',
-        value: `No subscription found for ${parsed.repo}#${parsed.prNumber}.`,
+        value: `未找到 ${parsed.repo}#${parsed.prNumber} 的订阅。`,
       }
     }
     writeSubscriptions(after)
     return {
       type: 'text',
-      value: `Unsubscribed from ${parsed.repo}#${parsed.prNumber}.`,
+      value: `已取消订阅 ${parsed.repo}#${parsed.prNumber}。`,
     }
   }
 
@@ -143,7 +141,7 @@ const call: LocalCommandCall = async (args, _context) => {
   if (existing) {
     return {
       type: 'text',
-      value: `Already subscribed to ${parsed.repo}#${parsed.prNumber} (since ${existing.subscribedAt}).`,
+      value: `已订阅 ${parsed.repo}#${parsed.prNumber}（自 ${existing.subscribedAt} 起）。`,
     }
   }
 
@@ -156,7 +154,7 @@ const call: LocalCommandCall = async (args, _context) => {
 
   return {
     type: 'text',
-    value: `Subscribed to ${parsed.repo}#${parsed.prNumber}. You will receive notifications for comments, CI status, and reviews.`,
+    value: `已订阅 ${parsed.repo}#${parsed.prNumber}。您将收到评论、CI 状态和审查的通知。`,
   }
 }
 
@@ -164,7 +162,7 @@ const subscribePr = {
   type: 'local',
   name: 'subscribe-pr',
   aliases: ['watch-pr'],
-  description: 'Subscribe to GitHub PR activity (comments, CI, reviews)',
+  description: '订阅 GitHub PR 活动（评论、CI、审查）',
   argumentHint: '<pr-url-or-number>',
   supportsNonInteractive: false,
   isHidden: true,

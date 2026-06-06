@@ -53,12 +53,12 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
   // ── get ───────────────────────────────────────────────────────────────────
   if (subCmd === 'get') {
     if (!rest) {
-      return { action: 'invalid', reason: 'get requires a store id' }
+      return { action: 'invalid', reason: 'get 需要存储 ID' }
     }
     const id = rest.split(/\s+/)[0]
     /* istanbul ignore next */
     if (!id) {
-      return { action: 'invalid', reason: 'get requires a store id' }
+      return { action: 'invalid', reason: 'get 需要存储 ID' }
     }
     return { action: 'get', id }
   }
@@ -68,7 +68,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
     if (!rest) {
       return {
         action: 'invalid',
-        reason: 'create requires a store name, e.g. create "My Work Store"',
+        reason: 'create 需要存储名称，例如 create "My Work Store"',
       }
     }
     return { action: 'create', name: rest }
@@ -77,12 +77,12 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
   // ── archive ───────────────────────────────────────────────────────────────
   if (subCmd === 'archive') {
     if (!rest) {
-      return { action: 'invalid', reason: 'archive requires a store id' }
+      return { action: 'invalid', reason: 'archive 需要存储 ID' }
     }
     const id = rest.split(/\s+/)[0]
     /* istanbul ignore next */
     if (!id) {
-      return { action: 'invalid', reason: 'archive requires a store id' }
+      return { action: 'invalid', reason: 'archive 需要存储 ID' }
     }
     return { action: 'archive', id }
   }
@@ -90,12 +90,12 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
   // ── memories ──────────────────────────────────────────────────────────────
   if (subCmd === 'memories') {
     if (!rest) {
-      return { action: 'invalid', reason: 'memories requires a store id' }
+      return { action: 'invalid', reason: 'memories 需要存储 ID' }
     }
     const storeId = rest.split(/\s+/)[0]
     /* istanbul ignore next */
     if (!storeId) {
-      return { action: 'invalid', reason: 'memories requires a store id' }
+      return { action: 'invalid', reason: 'memories 需要存储 ID' }
     }
     return { action: 'memories', storeId }
   }
@@ -107,7 +107,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
       return {
         action: 'invalid',
         reason:
-          'create-memory requires a store id and content, e.g. create-memory ms_123 "The content"',
+          'create-memory 需要存储 ID 和内容，例如 create-memory ms_123 "The content"',
       }
     }
     const storeId = parts[0]
@@ -115,7 +115,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
     if (!content.trim()) {
       return {
         action: 'invalid',
-        reason: 'create-memory requires non-empty content',
+        reason: 'create-memory 需要非空内容',
       }
     }
     return { action: 'create-memory', storeId, content: content.trim() }
@@ -128,7 +128,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
       return {
         action: 'invalid',
         reason:
-          'get-memory requires a store id and memory id, e.g. get-memory ms_123 mem_456',
+          'get-memory 需要存储 ID 和记忆 ID，例如 get-memory ms_123 mem_456',
       }
     }
     return { action: 'get-memory', storeId: parts[0], memoryId: parts[1] }
@@ -141,7 +141,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
       return {
         action: 'invalid',
         reason:
-          'update-memory requires store id, memory id, and content, e.g. update-memory ms_123 mem_456 "New content"',
+          'update-memory 需要存储 ID、记忆 ID 和内容，例如 update-memory ms_123 mem_456 "New content"',
       }
     }
     const storeId = parts[0]
@@ -150,7 +150,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
     if (!content.trim()) {
       return {
         action: 'invalid',
-        reason: 'update-memory requires non-empty content',
+        reason: 'update-memory 需要非空内容',
       }
     }
     return {
@@ -168,7 +168,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
       return {
         action: 'invalid',
         reason:
-          'delete-memory requires a store id and memory id, e.g. delete-memory ms_123 mem_456',
+          'delete-memory 需要存储 ID 和记忆 ID，例如 delete-memory ms_123 mem_456',
       }
     }
     return { action: 'delete-memory', storeId: parts[0], memoryId: parts[1] }
@@ -177,12 +177,12 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
   // ── versions ──────────────────────────────────────────────────────────────
   if (subCmd === 'versions') {
     if (!rest) {
-      return { action: 'invalid', reason: 'versions requires a store id' }
+      return { action: 'invalid', reason: 'versions 需要存储 ID' }
     }
     const storeId = rest.split(/\s+/)[0]
     /* istanbul ignore next */
     if (!storeId) {
-      return { action: 'invalid', reason: 'versions requires a store id' }
+      return { action: 'invalid', reason: 'versions 需要存储 ID' }
     }
     return { action: 'versions', storeId }
   }
@@ -193,8 +193,7 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
     if (parts.length < 2 || !parts[0] || !parts[1]) {
       return {
         action: 'invalid',
-        reason:
-          'redact requires a store id and version id, e.g. redact ms_123 ver_456',
+        reason: 'redact 需要存储 ID 和版本 ID，例如 redact ms_123 ver_456',
       }
     }
     return { action: 'redact', storeId: parts[0], versionId: parts[1] }
@@ -202,6 +201,6 @@ export function parseMemoryStoresArgs(args: string): MemoryStoresArgs {
 
   return {
     action: 'invalid',
-    reason: `Unknown sub-command "${subCmd}". ${USAGE}`,
+    reason: `未知子命令 "${subCmd}"。 ${USAGE}`,
   }
 }

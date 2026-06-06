@@ -1,7 +1,6 @@
 import { z } from 'zod/v4'
 import { getFeatureValue_DEPRECATED } from '../services/analytics/growthbook.js'
 import { lazySchema } from '../utils/lazySchema.js'
-import { lt } from '../utils/semver.js'
 import { isEnvLessBridgeEnabled } from './bridgeEnabled.js'
 
 export type EnvLessBridgeConfig = {
@@ -105,7 +104,7 @@ const envLessBridgeConfigSchema = lazySchema(() =>
       .string()
       .refine(v => {
         try {
-          lt(v, '0.0.0')
+          semverLt(v, '0.0.0')
           return true
         } catch {
           return false
@@ -146,7 +145,7 @@ export async function getEnvLessBridgeConfig(): Promise<EnvLessBridgeConfig> {
  */
 export async function checkEnvLessBridgeMinVersion(): Promise<string | null> {
   const cfg = await getEnvLessBridgeConfig()
-  if (cfg.min_version && lt(MACRO.VERSION, cfg.min_version)) {
+  if (cfg.min_version && semverLt(MACRO.VERSION, cfg.min_version)) {
     return `Your version of Claude Code (${MACRO.VERSION}) is too old for Remote Control.\nVersion ${cfg.min_version} or higher is required. Run \`claude update\` to update.`
   }
   return null
@@ -162,4 +161,21 @@ export async function shouldShowAppUpgradeMessage(): Promise<boolean> {
   if (!isEnvLessBridgeEnabled()) return false
   const cfg = await getEnvLessBridgeConfig()
   return cfg.should_show_app_upgrade_message
+}
+
+/**
+ * Simplified semver less-than comparison.
+ * Compares two version strings by splitting on '.' and comparing numeric parts.
+ */
+function semverLt(a: string, b: string): boolean {
+  const aParts = a.split('.').map(Number)
+  const bParts = b.split('.').map(Number)
+  const len = Math.max(aParts.length, bParts.length)
+  for (let i = 0; i < len; i++) {
+    const ai = aParts[i] ?? 0
+    const bi = bParts[i] ?? 0
+    if (ai < bi) return true
+    if (ai > bi) return false
+  }
+  return false // equal
 }

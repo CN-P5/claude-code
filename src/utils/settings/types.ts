@@ -816,10 +816,6 @@ export const SettingsSchema = lazySchema(() =>
         })
         .optional()
         .describe('Remote session configuration'),
-      autoUpdatesChannel: z
-        .enum(['latest', 'stable'])
-        .optional()
-        .describe('Release channel for auto-updates (latest or stable)'),
       ...(feature('LODESTONE')
         ? {
             disableDeepLinkRegistration: z
@@ -830,12 +826,6 @@ export const SettingsSchema = lazySchema(() =>
               ),
           }
         : {}),
-      minimumVersion: z
-        .string()
-        .optional()
-        .describe(
-          'Minimum version to stay on - prevents downgrades when switching to stable channel',
-        ),
       plansDirectory: z
         .string()
         .optional()

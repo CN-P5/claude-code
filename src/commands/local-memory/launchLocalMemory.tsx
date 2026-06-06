@@ -17,7 +17,7 @@ import { parseLocalMemoryArgs } from './parseArgs.js';
 import { launchCommand } from '../_shared/launchCommand.js';
 
 const USAGE =
-  'Usage: /local-memory list | create STORE | store STORE KEY VALUE | fetch STORE KEY | entries STORE | archive STORE';
+  '用法: /local-memory list | create STORE | store STORE KEY VALUE | fetch STORE KEY | entries STORE | archive STORE';
 
 type LocalMemoryViewProps = React.ComponentProps<typeof LocalMemoryView>;
 
@@ -31,16 +31,16 @@ const ACTION_LABEL_COLUMN_WIDTH = 26;
 
 function formatStoreList(stores: string[]): string {
   if (stores.length === 0) {
-    return 'No memory stores found.';
+    return '未找到记忆存储。';
   }
-  return ['Local Memory Stores', ...stores.map(store => `- ${store}`)].join('\n');
+  return ['本地记忆存储', ...stores.map(store => `- ${store}`)].join('\n');
 }
 
 function formatEntryList(store: string, keys: string[]): string {
   if (keys.length === 0) {
-    return `No entries in "${store}".`;
+    return `"${store}" 中没有条目。`;
   }
-  return [`Entries in "${store}"`, ...keys.map(key => `- ${key}`)].join('\n');
+  return [`"${store}" 中的条目`, ...keys.map(key => `- ${key}`)].join('\n');
 }
 
 // ── Interactive multi-step panel ───────────────────────────────────────────
@@ -76,36 +76,36 @@ const MENU: Array<{
   label: string;
   description: string;
 }> = [
-  { kind: 'list', label: 'List', description: 'Show all stores' },
+  { kind: 'list', label: 'List', description: '显示所有存储' },
   {
     kind: 'create',
     label: 'Create',
-    description: 'Create a new memory store',
+    description: '创建新的记忆存储',
   },
   {
     kind: 'store',
     label: 'Store',
-    description: 'Write an entry: store name + key + value',
+    description: '写入条目：存储名 + 键 + 值',
   },
   {
     kind: 'fetch',
     label: 'Fetch',
-    description: 'Read an entry by store name + key',
+    description: '按存储名 + 键读取条目',
   },
   {
     kind: 'entries',
     label: 'Entries',
-    description: 'List entry keys in a store',
+    description: '列出存储中的条目键',
   },
   {
     kind: 'archive',
     label: 'Archive',
-    description: 'Archive a store (rename to *.archived)',
+    description: '归档存储（重命名为 *.archived）',
   },
   {
     kind: 'about',
     label: 'About',
-    description: 'Show command syntax',
+    description: '显示命令语法',
   },
 ];
 
@@ -145,12 +145,12 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
           return;
         }
         if (!store) {
-          setError('Internal: missing store');
+          setError('内部错误: 缺少存储名');
           return;
         }
         if (action === 'create') {
           createStore(store);
-          closeWith(`Store created: ${store}`);
+          closeWith(`存储已创建: ${store}`);
           return;
         }
         if (action === 'entries') {
@@ -160,25 +160,25 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
         }
         if (action === 'archive') {
           archiveStore(store);
-          closeWith(`Archived store: ${store}`);
+          closeWith(`已归档存储: ${store}`);
           return;
         }
         if (action === 'fetch') {
           if (!key) {
-            setError('Internal: missing key');
+            setError('内部错误: 缺少键名');
             return;
           }
           const v = getEntry(store, key);
           if (v === null) {
-            closeWith(`Entry not found: ${store}/${key}`);
+            closeWith(`条目未找到: ${store}/${key}`);
             return;
           }
-          closeWith(`Entry fetched: ${store}/${key}\n\n${v}`);
+          closeWith(`已获取条目: ${store}/${key}\n\n${v}`);
           return;
         }
         if (action === 'store') {
           if (!key || value === undefined) {
-            setError('Internal: missing key or value');
+            setError('内部错误: 缺少键名或值');
             return;
           }
           // Confirm overwrite if key already exists (safety prompt)
@@ -192,7 +192,7 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
             return;
           }
           setEntry(store, key, value);
-          closeWith(`Stored ${store}/${key} (${value.length} chars)`);
+          closeWith(`已存储 ${store}/${key}（${value.length} 个字符）`);
           return;
         }
       } catch (e) {
@@ -295,9 +295,9 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
   if (step.kind === 'menu') {
     return (
       <Dialog
-        title="Local Memory"
-        subtitle={`${MENU.length} actions`}
-        onCancel={() => closeWith('Local memory panel dismissed')}
+        title="本地记忆"
+        subtitle={`${MENU.length} 个操作`}
+        onCancel={() => closeWith('本地记忆面板已关闭')}
         color="background"
         hideInputGuide
       >
@@ -309,7 +309,7 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
             </Box>
           ))}
           <Box marginTop={1}>
-            <Text dimColor>↑/↓ or 1-7 select · Enter run · Esc close</Text>
+            <Text dimColor>↑/↓ 或 1-7 选择 · Enter 运行 · Esc 关闭</Text>
           </Box>
         </Box>
       </Dialog>
@@ -319,11 +319,11 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
   // Confirmation prompts
   if (step.kind === 'confirm-archive') {
     return (
-      <Dialog title="Confirm Archive" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
+      <Dialog title="确认归档" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
         <Box flexDirection="column">
-          <Text>Archive store "{step.store}"? This renames it to *.archived.</Text>
+          <Text>归档存储 "{step.store}"？此操作会将其重命名为 *.archived。</Text>
           <Box marginTop={1}>
-            <Text dimColor>y/Enter = archive · n/Esc = cancel</Text>
+            <Text dimColor>y/Enter = 归档 · n/Esc = 取消</Text>
           </Box>
         </Box>
       </Dialog>
@@ -331,13 +331,13 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
   }
   if (step.kind === 'confirm-overwrite') {
     return (
-      <Dialog title="Confirm Overwrite" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
+      <Dialog title="确认覆盖" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
         <Box flexDirection="column">
           <Text>
-            Entry "{step.store}/{step.key}" already exists. Overwrite with new value ({step.value.length} chars)?
+            条目 "{step.store}/{step.key}" 已存在。是否用新值（{step.value.length} 个字符）覆盖？
           </Text>
           <Box marginTop={1}>
-            <Text dimColor>y/Enter = overwrite · n/Esc = cancel</Text>
+            <Text dimColor>y/Enter = 覆盖 · n/Esc = 取消</Text>
           </Box>
         </Box>
       </Dialog>
@@ -345,22 +345,22 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
   }
 
   // collect-* steps share the same TextInput render
-  const fieldLabel = step.kind === 'collect-store' ? 'STORE NAME' : step.kind === 'collect-key' ? 'KEY NAME' : 'VALUE';
+  const fieldLabel = step.kind === 'collect-store' ? '存储名' : step.kind === 'collect-key' ? '键名' : '值';
   const placeholder =
     step.kind === 'collect-store'
-      ? 'e.g. my-notes'
+      ? '例如: my-notes'
       : step.kind === 'collect-key'
-        ? 'e.g. todo-2026-05-08'
-        : 'free text';
+        ? '例如: todo-2026-05-08'
+        : '自由文本';
   const validateAndAdvance = (raw: string) => {
     const trimmed = raw.trim();
     if (step.kind === 'collect-store') {
       if (!trimmed) {
-        setError('Store name required');
+        setError('存储名不能为空');
         return;
       }
       if (!isValidStoreName(trimmed)) {
-        setError('Invalid store name (no /, \\, :, null byte, or leading dot; max 255 chars)');
+        setError('存储名无效（不能包含 /、\\、:、空字节或以 . 开头；最长 255 字符）');
         return;
       }
       // Action-specific completion
@@ -382,11 +382,11 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
     }
     if (step.kind === 'collect-key') {
       if (!trimmed) {
-        setError('Key required');
+        setError('键名不能为空');
         return;
       }
       if (!isValidKey(trimmed)) {
-        setError('Invalid key (allowed: letters/digits/._- only; no leading dot; not a Windows reserved name)');
+        setError('键名无效（仅允许字母/数字/._-；不能以 . 开头；不能是 Windows 保留名）');
         return;
       }
       if (step.action === 'fetch') {
@@ -410,7 +410,7 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
 
   return (
     <Dialog
-      title={`Local Memory · ${step.kind.replace('collect-', '').toUpperCase()}`}
+      title={`本地记忆 · ${step.kind.replace('collect-', '').toUpperCase()}`}
       onCancel={() => transition({ kind: 'menu' })}
       color="background"
       hideInputGuide
@@ -441,7 +441,7 @@ function LocalMemoryPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
           </Box>
         )}
         <Box marginTop={1}>
-          <Text dimColor>Enter = next · Esc = back</Text>
+          <Text dimColor>Enter = 下一步 · Esc = 返回</Text>
         </Box>
       </Box>
     </Dialog>
@@ -461,14 +461,14 @@ async function dispatchLocalMemory(
   if (parsed.action === 'create') {
     const { store } = parsed;
     createStore(store);
-    onDone(`Store created: ${store}`, { display: 'system' });
+    onDone(`存储已创建: ${store}`, { display: 'system' });
     return null;
   }
 
   if (parsed.action === 'store') {
     const { store, key, value } = parsed;
     setEntry(store, key, value);
-    onDone(`Stored entry "${key}" in store "${store}".`, { display: 'system' });
+    onDone(`已存储条目 "${key}" 到存储 "${store}"。`, { display: 'system' });
     return null;
   }
 
@@ -476,10 +476,10 @@ async function dispatchLocalMemory(
     const { store, key } = parsed;
     const value = getEntry(store, key);
     if (value === null) {
-      onDone(`Entry not found: ${store}/${key}`, { display: 'system' });
+      onDone(`条目未找到: ${store}/${key}`, { display: 'system' });
       return null;
     }
-    onDone(`Entry fetched: ${store}/${key}\n${value}`, { display: 'system' });
+    onDone(`已获取条目: ${store}/${key}\n${value}`, { display: 'system' });
     return null;
   }
 
@@ -493,7 +493,7 @@ async function dispatchLocalMemory(
   if (parsed.action === 'archive') {
     const { store } = parsed;
     archiveStore(store);
-    onDone(`Archived store: ${store}`, { display: 'system' });
+    onDone(`已归档存储: ${store}`, { display: 'system' });
     return null;
   }
 

@@ -1,4 +1,4 @@
-import { appendFile, mkdir, symlink, unlink } from 'fs/promises'
+import { appendFile, mkdir } from 'fs/promises'
 import memoize from 'lodash-es/memoize.js'
 import { dirname, join } from 'path'
 import { getSessionId } from 'src/bootstrap/state.js'
@@ -145,7 +145,6 @@ async function appendAsync(
     await mkdir(dir, { recursive: true }).catch(() => {})
   }
   await appendFile(path, content)
-  void updateLatestDebugLogSymlink()
 }
 
 function noop(): void {}
@@ -171,7 +170,6 @@ function getDebugWriter(): BufferedWriter {
             }
           }
           getFsImplementation().appendFileSync(path, content)
-          void updateLatestDebugLogSymlink()
           return
         }
         // Buffered path (ants without --debug): flushes ~1/sec so chain
@@ -232,23 +230,6 @@ export function getDebugLogPath(): string {
     join(getClaudeConfigHomeDir(), 'debug', `${getSessionId()}.txt`)
   )
 }
-
-/**
- * Updates the latest debug log symlink to point to the current debug log file.
- * Creates or updates a symlink at ~/.claude/debug/latest
- */
-const updateLatestDebugLogSymlink = memoize(async (): Promise<void> => {
-  try {
-    const debugLogPath = getDebugLogPath()
-    const debugLogsDir = dirname(debugLogPath)
-    const latestSymlinkPath = join(debugLogsDir, 'latest')
-
-    await unlink(latestSymlinkPath).catch(() => {})
-    await symlink(debugLogPath, latestSymlinkPath)
-  } catch {
-    // Silently fail if symlink creation fails
-  }
-})
 
 /**
  * Logs errors for Ants only, always visible in production.

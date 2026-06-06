@@ -26,7 +26,6 @@ import { getAncestorPidsAsync } from './genericProcessUtils.js'
 import { isJetBrainsPluginInstalledCached } from './jetbrains.js'
 import { logError } from './log.js'
 import { getPlatform } from './platform.js'
-import { lt } from './semver.js'
 
 // Lazy: IdeOnboardingDialog.tsx pulls React/ink; only needed in interactive onboarding path
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -886,7 +885,7 @@ async function installIDEExtension(ideType: IdeType): Promise<string | null> {
       }
       let version = await getInstalledVSCodeExtensionVersion(command)
       // If it's not installed or the version is older than the one we have bundled,
-      if (!version || lt(version, getClaudeCodeVersion())) {
+      if (!version || semverLt(version, getClaudeCodeVersion())) {
         // `code` may crash when invoked too quickly in succession
         await sleep(500)
         const result = await execFileNoThrowWithCwd(
@@ -1491,4 +1490,21 @@ async function installFromArtifactory(command: string): Promise<string> {
     }
     throw error
   }
+}
+
+/**
+ * Simplified semver less-than comparison.
+ * Compares two version strings by splitting on '.' and comparing numeric parts.
+ */
+function semverLt(a: string, b: string): boolean {
+  const aParts = a.split('.').map(Number)
+  const bParts = b.split('.').map(Number)
+  const len = Math.max(aParts.length, bParts.length)
+  for (let i = 0; i < len; i++) {
+    const ai = aParts[i] ?? 0
+    const bi = bParts[i] ?? 0
+    if (ai < bi) return true
+    if (ai > bi) return false
+  }
+  return false // equal
 }

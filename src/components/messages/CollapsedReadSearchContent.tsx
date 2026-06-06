@@ -225,8 +225,8 @@ export function CollapsedReadSearchContent({
         {message.hookInfos && message.hookInfos.length > 0 && (
           <>
             <Text dimColor>
-              {'  ⎿  '}Ran {message.hookCount} PreToolUse {message.hookCount === 1 ? 'hook' : 'hooks'} (
-              {formatSecondsShort(message.hookTotalMs ?? 0)})
+              {'  ⎿  '}运行了 {message.hookCount} 个 PreToolUse 钩子（
+              {formatSecondsShort(message.hookTotalMs ?? 0)}）
             </Text>
             {message.hookInfos.map((info, idx) => (
               <Text key={`hook-${idx}`} dimColor>
@@ -239,7 +239,7 @@ export function CollapsedReadSearchContent({
         {message.relevantMemories?.map(m => (
           <Box key={m.path} flexDirection="column" marginTop={1}>
             <Text dimColor>
-              {'  ⎿  '}Recalled {basename(m.path)}
+              {'  ⎿  '}已回忆 {basename(m.path)}
             </Text>
             <Box paddingLeft={5}>
               <Text>
@@ -284,7 +284,7 @@ export function CollapsedReadSearchContent({
     }
     if (elapsed !== undefined && elapsed >= 2) {
       const time = formatDuration(elapsed * 1000);
-      shellProgressSuffix = lines > 0 ? ` (${time} · ${lines} ${lines === 1 ? 'line' : 'lines'})` : ` (${time})`;
+      shellProgressSuffix = lines > 0 ? ` (${time} · ${lines} 行)` : ` (${time})`;
     }
   }
 
@@ -304,9 +304,9 @@ export function CollapsedReadSearchContent({
   }
   if (isFullscreenEnvEnabled() && message.commits?.length) {
     const byKind = {
-      committed: 'committed',
-      amended: 'amended commit',
-      'cherry-picked': 'cherry-picked',
+      committed: '已提交',
+      amended: '已修正提交',
+      'cherry-picked': '已择优挑选',
     };
     for (const kind of ['committed', 'amended', 'cherry-picked'] as const) {
       const shas = message.commits.filter(c => c.kind === kind).map(c => c.sha);
@@ -317,22 +317,22 @@ export function CollapsedReadSearchContent({
   }
   if (isFullscreenEnvEnabled() && message.pushes?.length) {
     const branches = uniq(message.pushes.map(p => p.branch));
-    pushPart('push', 'pushed to', <Text bold>{branches.join(', ')}</Text>);
+    pushPart('push', '已推送至', <Text bold>{branches.join(', ')}</Text>);
   }
   if (isFullscreenEnvEnabled() && message.branches?.length) {
-    const byAction = { merged: 'merged', rebased: 'rebased onto' };
+    const byAction = { merged: '已合并', rebased: '已变基至' };
     for (const b of message.branches) {
       pushPart(`br-${b.action}-${b.ref}`, byAction[b.action], <Text bold>{b.ref}</Text>);
     }
   }
   if (isFullscreenEnvEnabled() && message.prs?.length) {
     const verbs = {
-      created: 'created',
-      edited: 'edited',
-      merged: 'merged',
-      commented: 'commented on',
-      closed: 'closed',
-      ready: 'marked ready',
+      created: '已创建',
+      edited: '已编辑',
+      merged: '已合并',
+      commented: '已评论',
+      closed: '已关闭',
+      ready: '已标记就绪',
     };
     for (const pr of message.prs) {
       pushPart(
@@ -345,57 +345,51 @@ export function CollapsedReadSearchContent({
 
   if (searchCount > 0) {
     const isFirst = nonMemParts.length === 0;
-    const searchVerb = isActiveGroup
-      ? isFirst
-        ? 'Searching for'
-        : 'searching for'
-      : isFirst
-        ? 'Searched for'
-        : 'searched for';
+    const searchVerb = isActiveGroup ? (isFirst ? '正在搜索' : '正在搜索') : isFirst ? '已搜索' : '已搜索';
     if (!isFirst) {
       nonMemParts.push(<Text key="comma-s">, </Text>);
     }
     nonMemParts.push(
       <Text key="search">
-        {searchVerb} <Text bold>{searchCount}</Text> {searchCount === 1 ? 'pattern' : 'patterns'}
+        {searchVerb} <Text bold>{searchCount}</Text> 个模式
       </Text>,
     );
   }
 
   if (readCount > 0) {
     const isFirst = nonMemParts.length === 0;
-    const readVerb = isActiveGroup ? (isFirst ? 'Reading' : 'reading') : isFirst ? 'Read' : 'read';
+    const readVerb = isActiveGroup ? (isFirst ? '正在读取' : '正在读取') : isFirst ? '已读取' : '已读取';
     if (!isFirst) {
       nonMemParts.push(<Text key="comma-r">, </Text>);
     }
     nonMemParts.push(
       <Text key="read">
-        {readVerb} <Text bold>{readCount}</Text> {readCount === 1 ? 'file' : 'files'}
+        {readVerb} <Text bold>{readCount}</Text> 个文件
       </Text>,
     );
   }
 
   if (listCount > 0) {
     const isFirst = nonMemParts.length === 0;
-    const listVerb = isActiveGroup ? (isFirst ? 'Listing' : 'listing') : isFirst ? 'Listed' : 'listed';
+    const listVerb = isActiveGroup ? (isFirst ? '正在列出' : '正在列出') : isFirst ? '已列出' : '已列出';
     if (!isFirst) {
       nonMemParts.push(<Text key="comma-l">, </Text>);
     }
     nonMemParts.push(
       <Text key="list">
-        {listVerb} <Text bold>{listCount}</Text> {listCount === 1 ? 'directory' : 'directories'}
+        {listVerb} <Text bold>{listCount}</Text> 个目录
       </Text>,
     );
   }
 
   if (replCount > 0) {
-    const replVerb = isActiveGroup ? "REPL'ing" : "REPL'd";
+    const replVerb = isActiveGroup ? '正在执行 REPL' : '已执行 REPL';
     if (nonMemParts.length > 0) {
       nonMemParts.push(<Text key="comma-repl">, </Text>);
     }
     nonMemParts.push(
       <Text key="repl">
-        {replVerb} <Text bold>{replCount}</Text> {replCount === 1 ? 'time' : 'times'}
+        {replVerb} <Text bold>{replCount}</Text> 次
       </Text>,
     );
   }
@@ -403,7 +397,7 @@ export function CollapsedReadSearchContent({
   if (mcpCallCount > 0) {
     const serverLabel = message.mcpServerNames?.map(n => n.replace(/^claude\.ai /, '')).join(', ') || 'MCP';
     const isFirst = nonMemParts.length === 0;
-    const verb = isActiveGroup ? (isFirst ? 'Querying' : 'querying') : isFirst ? 'Queried' : 'queried';
+    const verb = isActiveGroup ? (isFirst ? '正在查询' : '正在查询') : isFirst ? '已查询' : '已查询';
     if (!isFirst) {
       nonMemParts.push(<Text key="comma-mcp">, </Text>);
     }
@@ -413,7 +407,7 @@ export function CollapsedReadSearchContent({
         {mcpCallCount > 1 && (
           <>
             {' '}
-            <Text bold>{mcpCallCount}</Text> times
+            <Text bold>{mcpCallCount}</Text> 次
           </>
         )}
       </Text>,
@@ -422,13 +416,13 @@ export function CollapsedReadSearchContent({
 
   if (isFullscreenEnvEnabled() && bashCount > 0) {
     const isFirst = nonMemParts.length === 0;
-    const verb = isActiveGroup ? (isFirst ? 'Running' : 'running') : isFirst ? 'Ran' : 'ran';
+    const verb = isActiveGroup ? (isFirst ? '正在运行' : '正在运行') : isFirst ? '已运行' : '已运行';
     if (!isFirst) {
       nonMemParts.push(<Text key="comma-bash">, </Text>);
     }
     nonMemParts.push(
       <Text key="bash">
-        {verb} <Text bold>{bashCount}</Text> bash {bashCount === 1 ? 'command' : 'commands'}
+        {verb} <Text bold>{bashCount}</Text> 个 bash 命令
       </Text>,
     );
   }
@@ -439,35 +433,35 @@ export function CollapsedReadSearchContent({
 
   if (memoryReadCount > 0) {
     const isFirst = !hasPrecedingNonMem && memParts.length === 0;
-    const verb = isActiveGroup ? (isFirst ? 'Recalling' : 'recalling') : isFirst ? 'Recalled' : 'recalled';
+    const verb = isActiveGroup ? (isFirst ? '正在回忆' : '正在回忆') : isFirst ? '已回忆' : '已回忆';
     if (!isFirst) {
       memParts.push(<Text key="comma-mr">, </Text>);
     }
     memParts.push(
       <Text key="mem-read">
-        {verb} <Text bold>{memoryReadCount}</Text> {memoryReadCount === 1 ? 'memory' : 'memories'}
+        {verb} <Text bold>{memoryReadCount}</Text> 条记忆
       </Text>,
     );
   }
 
   if (memorySearchCount > 0) {
     const isFirst = !hasPrecedingNonMem && memParts.length === 0;
-    const verb = isActiveGroup ? (isFirst ? 'Searching' : 'searching') : isFirst ? 'Searched' : 'searched';
+    const verb = isActiveGroup ? (isFirst ? '正在搜索' : '正在搜索') : isFirst ? '已搜索' : '已搜索';
     if (!isFirst) {
       memParts.push(<Text key="comma-ms">, </Text>);
     }
-    memParts.push(<Text key="mem-search">{`${verb} memories`}</Text>);
+    memParts.push(<Text key="mem-search">{`${verb} 记忆`}</Text>);
   }
 
   if (memoryWriteCount > 0) {
     const isFirst = !hasPrecedingNonMem && memParts.length === 0;
-    const verb = isActiveGroup ? (isFirst ? 'Writing' : 'writing') : isFirst ? 'Wrote' : 'wrote';
+    const verb = isActiveGroup ? (isFirst ? '正在写入' : '正在写入') : isFirst ? '已写入' : '已写入';
     if (!isFirst) {
       memParts.push(<Text key="comma-mw">, </Text>);
     }
     memParts.push(
       <Text key="mem-write">
-        {verb} <Text bold>{memoryWriteCount}</Text> {memoryWriteCount === 1 ? 'memory' : 'memories'}
+        {verb} <Text bold>{memoryWriteCount}</Text> 条记忆
       </Text>,
     );
   }
@@ -509,8 +503,8 @@ export function CollapsedReadSearchContent({
       )}
       {message.hookTotalMs !== undefined && message.hookTotalMs > 0 && (
         <Text dimColor>
-          {'  ⎿  '}Ran {message.hookCount} PreToolUse {message.hookCount === 1 ? 'hook' : 'hooks'} (
-          {formatSecondsShort(message.hookTotalMs)})
+          {'  ⎿  '}运行了 {message.hookCount} 个 PreToolUse 钩子（
+          {formatSecondsShort(message.hookTotalMs)}）
         </Text>
       )}
     </Box>

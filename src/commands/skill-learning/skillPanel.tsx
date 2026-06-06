@@ -46,11 +46,11 @@ async function getStatusText(): Promise<string> {
   const project = resolveProjectContext(process.cwd());
   const [observations, instincts] = await Promise.all([readObservations({ project }), loadInstincts({ project })]);
   return [
-    `Skill Learning status for ${project.projectName} (${project.projectId})`,
-    `Observations: ${observations.length}`,
-    `Instincts: ${instincts.length}`,
+    `${project.projectName}（${project.projectId}）的技能学习状态`,
+    `观察: ${observations.length}`,
+    `直觉: ${instincts.length}`,
     '',
-    `Skill Learning: ${isSkillLearningEnabled() ? 'enabled' : 'disabled'}`,
+    `技能学习: ${isSkillLearningEnabled() ? '已启用' : '已禁用'}`,
   ].join('\n');
 }
 
@@ -59,17 +59,17 @@ async function startSkillLearning(): Promise<string> {
 
   if (!isSkillLearningEnabled()) {
     process.env.SKILL_LEARNING_ENABLED = '1';
-    lines.push('Skill Learning: enabled (SKILL_LEARNING_ENABLED=1)');
+    lines.push('技能学习: 已启用（SKILL_LEARNING_ENABLED=1）');
   } else {
-    lines.push('Skill Learning: already enabled');
+    lines.push('技能学习: 已处于启用状态');
   }
 
   try {
     const { initSkillLearning } = await import('../../services/skillLearning/runtimeObserver.js');
     initSkillLearning();
-    lines.push('Runtime observer: initialized');
+    lines.push('运行时观察器: 已初始化');
   } catch {
-    lines.push('Runtime observer: init skipped (not available)');
+    lines.push('运行时观察器: 跳过初始化（不可用）');
   }
 
   return lines.join('\n');
@@ -81,9 +81,9 @@ async function stopSkillLearning(): Promise<string> {
   if (isSkillLearningEnabled()) {
     process.env.SKILL_LEARNING_ENABLED = '0';
     process.env.CLAUDE_SKILL_LEARNING_DISABLE = '1';
-    lines.push('Skill Learning: disabled (SKILL_LEARNING_ENABLED=0)');
+    lines.push('技能学习: 已禁用（SKILL_LEARNING_ENABLED=0）');
   } else {
-    lines.push('Skill Learning: already disabled');
+    lines.push('技能学习: 已处于禁用状态');
   }
 
   return lines.join('\n');
@@ -96,23 +96,23 @@ function SkillPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.ReactN
   const actions = useMemo<SkillAction[]>(
     () => [
       {
-        label: 'Status',
-        description: 'Show skill learning status for current project',
+        label: '状态',
+        description: '显示当前项目的技能学习状态',
         run: getStatusText,
       },
       {
-        label: 'Start',
-        description: 'Enable skill learning for this session',
+        label: '启动',
+        description: '为此会话启用技能学习',
         run: startSkillLearning,
       },
       {
-        label: 'Stop',
-        description: 'Disable skill learning for this session',
+        label: '停止',
+        description: '为此会话禁用技能学习',
         run: stopSkillLearning,
       },
       {
-        label: 'About',
-        description: 'Detailed description of skill learning features',
+        label: '关于',
+        description: '技能学习功能的详细说明',
         run: () => Promise.resolve(ABOUT_TEXT),
       },
     ],
@@ -143,9 +143,9 @@ function SkillPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.ReactN
 
   return (
     <Dialog
-      title="Skill Learning"
-      subtitle={`${actions.length} actions`}
-      onCancel={() => onDone('Skill panel dismissed', { display: 'system' })}
+      title="技能学习"
+      subtitle={`${actions.length} 个操作`}
+      onCancel={() => onDone('技能面板已关闭', { display: 'system' })}
       color="background"
       hideInputGuide
     >
@@ -157,7 +157,7 @@ function SkillPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.ReactN
           </Box>
         ))}
         <Box marginTop={1}>
-          <Text dimColor>↑/↓ select · Enter run · Esc close</Text>
+          <Text dimColor>↑/↓ 选择 · Enter 运行 · Esc 关闭</Text>
         </Box>
       </Box>
     </Dialog>

@@ -61,7 +61,7 @@ describe('perf-issue command', () => {
     const result = await loaded.call('', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Perf snapshot written to')
+      expect(result.value).toMatch(/Perf snapshot written to|性能快照已写入/)
       expect(result.value).toContain('perf-reports')
     }
   })
@@ -111,7 +111,7 @@ describe('perf-issue command', () => {
     expect(result.type).toBe('text')
     if (result.type === 'text') {
       // Should still produce a report, even if log section shows "not found"
-      expect(result.value).toContain('written to')
+      expect(result.value).toMatch(/written to|已写入/)
     }
   })
 
@@ -175,7 +175,7 @@ describe('perf-issue command', () => {
     const result = await loaded.call('', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('written to')
+      expect(result.value).toMatch(/written to|已写入/)
     }
   })
 
@@ -224,7 +224,7 @@ describe('perf-issue command', () => {
     const result = await loaded.call('', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('written to')
+      expect(result.value).toMatch(/written to|已写入/)
     }
   })
 
@@ -268,7 +268,7 @@ describe('perf-issue command', () => {
     const result = await loaded.call('', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('written to')
+      expect(result.value).toMatch(/written to|已写入/)
     }
   })
 
@@ -580,7 +580,7 @@ describe('perf-issue command', () => {
     // Restore CLAUDE_CONFIG_DIR so subsequent tests are not affected
     process.env.CLAUDE_CONFIG_DIR = claudeDir
 
-    if (result.type === 'text' && result.value.includes('Failed')) {
+    if (result.type === 'text' && /Failed|失败/.test(result.value)) {
       // Must not contain the raw home directory path
       expect(result.value).not.toContain(home)
       // Must be at most 200 chars in the error portion

@@ -20,7 +20,7 @@ export function UserGitHubWebhookMessage({ param, addMargin }: Props): React.Rea
 
   const eventMatch = extracted.match(/event[_-]?type[":\s]+["']?(\w+)/);
   const repoMatch = extracted.match(/repo(?:sitory)?[":\s]+["']?([^"'\s,}]+)/);
-  const event = eventMatch?.[1] ?? 'activity';
+  const event = eventMatch?.[1] ?? '活动';
   const repo = repoMatch?.[1] ?? '';
   const repoSuffix = repo ? ` in ${repo}` : '';
 

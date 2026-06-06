@@ -14,7 +14,7 @@ import type { Command } from '../../types/command.js'
 const onboarding: Command = {
   type: 'local-jsx',
   name: 'onboarding',
-  description: 'Re-run the first-run setup (theme, trust, model, MCP)',
+  description: '重新运行首次设置（主题、信任、模型、MCP）',
   argumentHint: '[full|theme|trust|model|mcp|status]',
   isEnabled: () => true,
   isHidden: false,

@@ -19,7 +19,7 @@ const call: LocalCommandCall = async (_args, context) => {
   const { messages, setMessages } = context
 
   if (messages.length === 0) {
-    return { type: 'text', value: 'No messages to snip.' }
+    return { type: 'text', value: '没有可裁剪的消息。' }
   }
 
   // Collect UUIDs of every message that will be snipped (everything currently
@@ -30,7 +30,7 @@ const call: LocalCommandCall = async (_args, context) => {
   const boundaryMessage: Message = {
     type: 'system',
     subtype: 'snip_boundary',
-    content: '[snip] Conversation history before this point has been snipped.',
+    content: '[snip] 此点之前的对话历史已被裁剪。',
     isMeta: true,
     timestamp: new Date().toISOString(),
     uuid: randomUUID(),
@@ -43,14 +43,14 @@ const call: LocalCommandCall = async (_args, context) => {
 
   return {
     type: 'text',
-    value: `Snipped ${removedUuids.length} message(s). Older history will be excluded from the next model query.`,
+    value: `已裁剪 ${removedUuids.length} 条消息。较早的历史记录将从下次模型查询中排除。`,
   }
 }
 
 const forceSnip = {
   type: 'local',
   name: 'force-snip',
-  description: 'Force snip conversation history at current point',
+  description: '在当前点强制裁剪对话历史',
   supportsNonInteractive: true,
   isHidden: false,
   load: () => Promise.resolve({ call }),

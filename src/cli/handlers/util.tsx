@@ -87,24 +87,3 @@ export async function doctorHandler(root: Root): Promise<void> {
   root.unmount();
   process.exit(0);
 }
-
-// install handler
-export async function installHandler(target: string | undefined, options: { force?: boolean }): Promise<void> {
-  const { setup } = await import('../../setup.js');
-  await setup(cwd(), 'default', false, false, undefined, false);
-  const { install } = await import('../../commands/install.js');
-  await new Promise<void>(resolve => {
-    const args: string[] = [];
-    if (target) args.push(target);
-    if (options.force) args.push('--force');
-
-    void install.call(
-      result => {
-        void resolve();
-        process.exit(result.includes('failed') ? 1 : 0);
-      },
-      {},
-      args,
-    );
-  });
-}

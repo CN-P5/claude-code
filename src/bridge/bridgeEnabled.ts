@@ -12,8 +12,6 @@ import { isSelfHostedBridge } from './bridgeConfig.js'
 // namespace after mock.module() (daemon/auth.test.ts), breaking spyOn.
 import * as authModule from '../utils/auth.js'
 import { isEnvTruthy } from '../utils/envUtils.js'
-import { lt } from '../utils/semver.js'
-
 /**
  * Runtime check for bridge mode entitlement.
  *
@@ -178,11 +176,28 @@ export function checkBridgeMinVersion(): string | null {
     const config = getDynamicConfig_CACHED_MAY_BE_STALE<{
       minVersion: string
     }>('tengu_bridge_min_version', { minVersion: '0.0.0' })
-    if (config.minVersion && lt(MACRO.VERSION, config.minVersion)) {
+    if (config.minVersion && semverLt(MACRO.VERSION, config.minVersion)) {
       return `Your version of Claude Code (${MACRO.VERSION}) is too old for Remote Control.\nVersion ${config.minVersion} or higher is required. Run \`claude update\` to update.`
     }
   }
   return null
+}
+
+/**
+ * Simplified semver less-than comparison.
+ * Compares two version strings by splitting on '.' and comparing numeric parts.
+ */
+function semverLt(a: string, b: string): boolean {
+  const aParts = a.split('.').map(Number)
+  const bParts = b.split('.').map(Number)
+  const len = Math.max(aParts.length, bParts.length)
+  for (let i = 0; i < len; i++) {
+    const ai = aParts[i] ?? 0
+    const bi = bParts[i] ?? 0
+    if (ai < bi) return true
+    if (ai > bi) return false
+  }
+  return false // equal
 }
 
 /**

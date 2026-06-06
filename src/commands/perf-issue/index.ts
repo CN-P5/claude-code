@@ -383,31 +383,31 @@ function formatReportMarkdown(
       ? `- wall_clock_seconds:    ${wallClockSeconds.toFixed(1)}`
       : '',
     '',
-    '## Cost Estimate (approximate)',
+    '## 费用估算（近似）',
     detectedModel
       ? `- model: ${detectedModel}`
-      : '- model: (unknown — not present in log)',
+      : '- model: (未知 — 日志中未出现)',
     estimatedCostUsd !== null
       ? `- estimated_usd: $${estimatedCostUsd.toFixed(4)}`
       : '- estimated_usd: ~$ unknown (unrecognized model)',
     `- cache_hit_rate: ${(cacheHitRate * 100).toFixed(1)}%`,
     '',
-    '## Tool Call Counts (top 10)',
+    '## 工具调用次数（前 10）',
     toolLines.length > 0 ? toolLines.join('\n') : '  (no tool calls)',
     '',
-    '## Tool Average Execution Time (top 10 by call count)',
+    '## 工具平均执行时间（按调用次数排序前 10）',
     toolAvgLines.length > 0
       ? toolAvgLines.join('\n')
       : '  (no timing data — tool_result/tool_use pairs not found)',
     '',
-    '## Notes',
+    '## 备注',
     '',
-    'Add a description of what you were doing when the perf issue surfaced:',
+    '添加你在性能问题出现时正在做的事情的描述：',
     '',
     '- ___',
     '',
-    "_(File this report in your repo's issue tracker. No network call was made._",
-    '_The fork does not transmit perf reports to Anthropic.)_',
+    '_(将此报告提交到你仓库的问题追踪器。未进行网络调用。_',
+    '_此分支不会向 Anthropic 传输性能报告。）_',
   ]
     .filter(line => line !== '')
     .join('\n')
@@ -478,7 +478,7 @@ const perfIssue: Command = {
   type: 'local',
   name: 'perf-issue',
   description:
-    'Capture a performance + token-usage snapshot. Flags: --format=json|csv|md (default md)',
+    '捕获性能 + token 用量快照。标志: --format=json|csv|md（默认 md）',
   isHidden: false,
   isEnabled: () => true,
   supportsNonInteractive: true,
@@ -555,13 +555,13 @@ const perfIssue: Command = {
         writeFileSync(reportPath, reportContent, 'utf8')
         return {
           type: 'text',
-          value: `Perf snapshot written to:\n  \`${reportPath}\`\n\nFormat: ${format}\nEdit it to add notes, then attach to your bug report.`,
+          value: `性能快照已写入:\n  \`${reportPath}\`\n\n格式: ${format}\n编辑它添加备注，然后附加到你的 bug 报告中。`,
         }
       } catch (err: unknown) {
         const msg = sanitizeErrorMessage(
           err instanceof Error ? err.message : String(err),
         )
-        return { type: 'text', value: `Failed to write perf report: ${msg}` }
+        return { type: 'text', value: `写入性能报告失败: ${msg}` }
       }
     },
   }),

@@ -7,7 +7,7 @@ export const call: LocalCommandCall = async (args, context) => {
   if (getPipeIpc(currentState).role !== 'master') {
     return {
       type: 'text',
-      value: 'Not in master mode. Use /attach <pipe-name> first.',
+      value: '未处于主模式。请先使用 /attach <pipe-name>。',
     }
   }
 
@@ -18,11 +18,11 @@ export const call: LocalCommandCall = async (args, context) => {
     // Show list of connected sub sessions
     const slaveNames = Object.keys(getPipeIpc(currentState).slaves)
     if (slaveNames.length === 0) {
-      return { type: 'text', value: 'No sub sessions connected.' }
+      return { type: 'text', value: '没有已连接的子会话。' }
     }
     return {
       type: 'text',
-      value: `Usage: /history <pipe-name>\nConnected sub sessions: ${slaveNames.join(', ')}`,
+      value: `用法：/history <pipe-name>\n已连接的子会话：${slaveNames.join(', ')}`,
     }
   }
 
@@ -30,7 +30,7 @@ export const call: LocalCommandCall = async (args, context) => {
   if (!slave) {
     return {
       type: 'text',
-      value: `Not attached to "${targetName}". Use /status to see connected sub sessions.`,
+      value: `未连接到 "${targetName}"。使用 /status 查看已连接的子会话。`,
     }
   }
 
@@ -49,12 +49,12 @@ export const call: LocalCommandCall = async (args, context) => {
   if (entries.length === 0) {
     return {
       type: 'text',
-      value: `No session history for "${targetName}" yet.`,
+      value: `"${targetName}" 暂无会话历史。`,
     }
   }
 
   const lines: string[] = [
-    `Session history for "${targetName}" (${entries.length}/${slave.history.length} entries):`,
+    `"${targetName}" 的会话历史（${entries.length}/${slave.history.length} 条记录）：`,
     '',
   ]
 

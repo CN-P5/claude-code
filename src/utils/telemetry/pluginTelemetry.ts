@@ -1,49 +1,50 @@
 /**
- * Plugin telemetry helpers — shared field builders for plugin lifecycle events.
+ * Plugin telemetry helpers — stubbed for fork deployment.
  *
- * Implements the twin-column privacy pattern: every user-defined-name field
- * emits both a raw value (routed to PII-tagged _PROTO_* BQ columns) and a
- * redacted twin (real name iff marketplace ∈ allowlist, else 'third-party').
+ * The original implementation emitted `tengu_plugin_*` events to the
+ * analytics pipeline. In the fork those events are dropped — every
+ * public function is a no-op or a pure utility.
  *
- * plugin_id_hash provides an opaque per-plugin aggregation key with no privacy
- * dependency — sha256(name@marketplace + FIXED_SALT) truncated to 16 chars.
- * This answers distinct-count and per-plugin-trend questions that the
- * redacted column can't, without exposing user-defined names.
+ * The types (`TelemetryPluginScope`, `EnabledVia`, `PluginCommandErrorCategory`,
+ * `InvocationTrigger`, `SkillExecutionContext`, `InstallSource`) and
+ * pure helpers (`hashPluginId`, `getTelemetryPluginScope`, `getEnabledVia`,
+ * `classifyPluginCommandError`) are kept because they are referenced
+ * by other modules and by tests.
  */
 
 import { createHash } from 'crypto'
 import { sep } from 'path'
 import {
-  type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-  type AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-  logEvent,
-} from '../../services/analytics/index.js'
+  isOfficialMarketplaceName,
+  parsePluginIdentifier,
+} from '../plugins/pluginIdentifier.js'
 import type {
   LoadedPlugin,
   PluginError,
   PluginManifest,
 } from '../../types/plugin.js'
 import {
-  isOfficialMarketplaceName,
-  parsePluginIdentifier,
-} from '../plugins/pluginIdentifier.js'
+  type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+  type AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
+} from '../../services/analytics/index.js'
 
 // builtinPlugins.ts:BUILTIN_MARKETPLACE_NAME — inlined to avoid the cycle
 // through commands.js. Marketplace schemas.ts enforces 'builtin' is reserved.
 const BUILTIN_MARKETPLACE_NAME = 'builtin'
 
-// Fixed salt for plugin_id_hash. Same constant across all repos and emission
-// sites. Not per-org, not rotated — per-org salt would defeat cross-org
-// distinct-count, rotation would break trend lines. Customers can compute the
-// same hash on their known plugin names to reverse-match their own telemetry.
+// Fixed salt for plugin_id_hash. Kept for source-compat with anything
+// that reads the constant.
 const PLUGIN_ID_HASH_SALT = 'claude-plugin-telemetry-v1'
 
+// Re-export for callers that need the type marker (preserved from the
+// original module surface).
+export type {
+  AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+  AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
+}
+
 /**
- * Opaque per-plugin aggregation key. Input is the name@marketplace string as
- * it appears in enabledPlugins keys, lowercased on the marketplace suffix for
- * reproducibility. 16-char truncation keeps BQ GROUP BY cardinality manageable
- * while making collisions negligible at projected 10k-plugin scale. Name case
- * is preserved in both branches (enabledPlugins keys are case-sensitive).
+ * Opaque per-plugin aggregation key. Pure utility — kept unchanged.
  */
 export function hashPluginId(name: string, marketplace?: string): string {
   const key = marketplace ? `${name}@${marketplace.toLowerCase()}` : name
@@ -53,16 +54,6 @@ export function hashPluginId(name: string, marketplace?: string): string {
     .slice(0, 16)
 }
 
-/**
- * 4-value scope enum for plugin origin. Distinct from PluginScope
- * (managed/user/project/local) which is installation-target — this is
- * marketplace-origin.
- *
- * - official: from an allowlisted Anthropic marketplace
- * - default-bundle: ships with product (@builtin), auto-enabled
- * - org: enterprise admin-pushed via managed settings (policySettings)
- * - user-local: user added marketplace or local plugin
- */
 export type TelemetryPluginScope =
   | 'official'
   | 'org'
@@ -80,11 +71,6 @@ export function getTelemetryPluginScope(
   return 'user-local'
 }
 
-/**
- * How a plugin arrived in the session. Splits self-selected from org-pushed
- * — plugin_scope alone doesn't (an official plugin can be user-installed OR
- * org-pushed; both are scope='official').
- */
 export type EnabledVia =
   | 'user-install'
   | 'org-policy'
@@ -126,108 +112,16 @@ export function getEnabledVia(
 }
 
 /**
- * Common plugin telemetry fields keyed off name@marketplace. Returns the
- * hash, scope enum, and the redacted-twin columns. Callers add the raw
- * _PROTO_* fields separately (those require the PII-tagged marker type).
- */
-export function buildPluginTelemetryFields(
-  name: string,
-  marketplace: string | undefined,
-  managedNames: Set<string> | null = null,
-): {
-  plugin_id_hash: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-  plugin_scope: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-  plugin_name_redacted: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-  marketplace_name_redacted: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
-  is_official_plugin: boolean
-} {
-  const scope = getTelemetryPluginScope(name, marketplace, managedNames)
-  // Both official marketplaces and builtin plugins are Anthropic-controlled
-  // — safe to expose real names in the redacted columns.
-  const isAnthropicControlled =
-    scope === 'official' || scope === 'default-bundle'
-  return {
-    plugin_id_hash: hashPluginId(
-      name,
-      marketplace,
-    ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    plugin_scope:
-      scope as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    plugin_name_redacted: (isAnthropicControlled
-      ? name
-      : 'third-party') as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    marketplace_name_redacted: (isAnthropicControlled && marketplace
-      ? marketplace
-      : 'third-party') as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-    is_official_plugin: isAnthropicControlled,
-  }
-}
-
-/**
- * Per-invocation callers (SkillTool, processSlashCommand) pass
- * managedNames=null — the session-level tengu_plugin_enabled_for_session
- * event carries the authoritative plugin_scope, and per-invocation rows can
- * join on plugin_id_hash to recover it. This keeps hot-path call sites free
- * of the extra settings read.
- */
-export function buildPluginCommandTelemetryFields(
-  pluginInfo: { pluginManifest: PluginManifest; repository: string },
-  managedNames: Set<string> | null = null,
-): ReturnType<typeof buildPluginTelemetryFields> {
-  const { marketplace } = parsePluginIdentifier(pluginInfo.repository)
-  return buildPluginTelemetryFields(
-    pluginInfo.pluginManifest.name,
-    marketplace,
-    managedNames,
-  )
-}
-
-/**
- * Emit tengu_plugin_enabled_for_session once per enabled plugin at session
- * start. Supplements tengu_skill_loaded (which still fires per-skill) — use
- * this for plugin-level aggregates instead of DISTINCT-on-prefix hacks.
- * A plugin with 5 skills emits 5 skill_loaded rows but 1 of these.
+ * Stub for `tengu_plugin_enabled_for_session`. No-op in the fork.
  */
 export function logPluginsEnabledForSession(
-  plugins: LoadedPlugin[],
-  managedNames: Set<string> | null,
-  seedDirs: string[],
+  _plugins: LoadedPlugin[],
+  _managedNames: Set<string> | null,
+  _seedDirs: string[],
 ): void {
-  for (const plugin of plugins) {
-    const { marketplace } = parsePluginIdentifier(plugin.repository)
-
-    logEvent('tengu_plugin_enabled_for_session', {
-      _PROTO_plugin_name:
-        plugin.name as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-      ...(marketplace && {
-        _PROTO_marketplace_name:
-          marketplace as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-      }),
-      ...buildPluginTelemetryFields(plugin.name, marketplace, managedNames),
-      enabled_via: getEnabledVia(
-        plugin,
-        managedNames,
-        seedDirs,
-      ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      skill_path_count:
-        (plugin.skillsPath ? 1 : 0) + (plugin.skillsPaths?.length ?? 0),
-      command_path_count:
-        (plugin.commandsPath ? 1 : 0) + (plugin.commandsPaths?.length ?? 0),
-      has_mcp: plugin.manifest.mcpServers !== undefined,
-      has_hooks: plugin.hooksConfig !== undefined,
-      ...(plugin.manifest.version && {
-        version: plugin.manifest
-          .version as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      }),
-    })
-  }
+  // No-op.
 }
 
-/**
- * Bounded-cardinality error bucket for CLI plugin operation failures.
- * Maps free-form error messages to 5 stable categories so dashboard
- * GROUP BY stays tractable.
- */
 export type PluginCommandErrorCategory =
   | 'network'
   | 'not-found'
@@ -259,31 +153,63 @@ export function classifyPluginCommandError(
 }
 
 /**
- * Emit tengu_plugin_load_failed once per error surfaced by session-start
- * plugin loading. Pairs with tengu_plugin_enabled_for_session so dashboards
- * can compute a load-success rate. PluginError.type is already a bounded
- * enum — use it directly as error_category.
+ * Stub for `tengu_plugin_load_failed`. No-op in the fork.
  */
 export function logPluginLoadErrors(
-  errors: PluginError[],
-  managedNames: Set<string> | null,
+  _errors: PluginError[],
+  _managedNames: Set<string> | null,
 ): void {
-  for (const err of errors) {
-    const { name, marketplace } = parsePluginIdentifier(err.source)
-    // Not all PluginError variants carry a plugin name (some have pluginId,
-    // some are marketplace-level). Use the 'plugin' property if present,
-    // fall back to the name parsed from err.source.
-    const pluginName = 'plugin' in err && err.plugin ? err.plugin : name
-    logEvent('tengu_plugin_load_failed', {
-      error_category:
-        err.type as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-      _PROTO_plugin_name:
-        pluginName as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-      ...(marketplace && {
-        _PROTO_marketplace_name:
-          marketplace as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
-      }),
-      ...buildPluginTelemetryFields(pluginName, marketplace, managedNames),
-    })
+  // No-op.
+}
+
+/**
+ * Build a placeholder telemetry-fields object. Callers that read
+ * these values for downstream event construction (e.g. processSlashCommand)
+ * still type-check. The returned object has the right shape but
+ * every field is empty.
+ */
+export function buildPluginTelemetryFields(
+  name: string,
+  marketplace: string | undefined,
+  managedNames: Set<string> | null = null,
+): {
+  plugin_id_hash: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+  plugin_scope: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+  plugin_name_redacted: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+  marketplace_name_redacted: AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
+  is_official_plugin: boolean
+} {
+  const scope = getTelemetryPluginScope(name, marketplace, managedNames)
+  const isAnthropicControlled =
+    scope === 'official' || scope === 'default-bundle'
+  return {
+    plugin_id_hash: hashPluginId(
+      name,
+      marketplace,
+    ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+    plugin_scope:
+      scope as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+    plugin_name_redacted: (isAnthropicControlled
+      ? name
+      : 'third-party') as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+    marketplace_name_redacted: (isAnthropicControlled && marketplace
+      ? marketplace
+      : 'third-party') as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+    is_official_plugin: isAnthropicControlled,
   }
+}
+
+/**
+ * Per-invocation variant of `buildPluginTelemetryFields`.
+ */
+export function buildPluginCommandTelemetryFields(
+  pluginInfo: { pluginManifest: PluginManifest; repository: string },
+  managedNames: Set<string> | null = null,
+): ReturnType<typeof buildPluginTelemetryFields> {
+  const { marketplace } = parsePluginIdentifier(pluginInfo.repository)
+  return buildPluginTelemetryFields(
+    pluginInfo.pluginManifest.name,
+    marketplace,
+    managedNames,
+  )
 }

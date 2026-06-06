@@ -5,8 +5,7 @@ const vaultCommand: Command = {
   type: 'local-jsx',
   name: 'vault',
   aliases: ['vaults'],
-  description:
-    'Manage remote secret vaults and credentials for cloud agents. Requires Claude Pro/Max/Team subscription.',
+  description: '管理云代理的远程密钥保险库和凭据。需要 Claude Pro/Max/Team 订阅。',
   // REPL markdown renderer strips `<...>` as HTML tags — use uppercase.
   argumentHint:
     'list | create NAME | get ID | archive ID | add-credential VAULT_ID KEY VALUE | archive-credential VAULT_ID CRED_ID',

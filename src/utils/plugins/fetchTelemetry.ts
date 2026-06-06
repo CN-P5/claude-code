@@ -1,22 +1,16 @@
 /**
- * Telemetry for plugin/marketplace fetches that hit the network.
+ * Plugin fetch telemetry — stubbed for fork deployment.
  *
- * Added for inc-5046 (GitHub complained about claude-plugins-official load).
- * Before this, fetch operations only had logForDebugging — no way to measure
- * actual network volume. This surfaces what's hitting GitHub vs GCS vs
- * user-hosted so we can see the GCS migration take effect and catch future
- * hot-path regressions before GitHub emails us again.
+ * The original implementation logged `tengu_plugin_remote_fetch`
+ * events for every plugin/marketplace fetch (install counts, git
+ * clone/pull, plugin clone, mcpb). In the fork there is no analytics
+ * pipeline — both `logPluginFetch` and `classifyFetchError` are
+ * no-ops / pure utilities.
  *
- * Volume: these fire at startup (install-counts 24h-TTL)
- * and on explicit user action (install/update). NOT per-interaction. Similar
- * envelope to tengu_binary_download_*.
+ * The `PluginFetchSource` / `PluginFetchOutcome` types are kept for
+ * source-compat with the 4 consumer files (pluginLoader, mcpbHandler,
+ * marketplaceManager, installCounts).
  */
-
-import {
-  logEvent,
-  type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS as SafeString,
-} from '../../services/analytics/index.js'
-import { OFFICIAL_MARKETPLACE_NAME } from './officialMarketplace.js'
 
 export type PluginFetchSource =
   | 'install_counts'
@@ -28,82 +22,25 @@ export type PluginFetchSource =
 
 export type PluginFetchOutcome = 'success' | 'failure' | 'cache_hit'
 
-// Allowlist of public hosts we report by name. Anything else (enterprise
-// git, self-hosted, internal) is bucketed as 'other' — we don't want
-// internal hostnames (git.mycorp.internal) landing in telemetry. Bounded
-// cardinality also keeps the dashboard host-breakdown tractable.
-const KNOWN_PUBLIC_HOSTS = new Set([
-  'github.com',
-  'raw.githubusercontent.com',
-  'objects.githubusercontent.com',
-  'gist.githubusercontent.com',
-  'gitlab.com',
-  'bitbucket.org',
-  'codeberg.org',
-  'dev.azure.com',
-  'ssh.dev.azure.com',
-  'storage.googleapis.com', // GCS — where Dickson's migration points
-])
-
 /**
- * Extract hostname from a URL or git spec and bucket to the allowlist.
- * Handles `https://host/...`, `git@host:path`, `ssh://host/...`.
- * Returns a known public host, 'other' (parseable but not allowlisted —
- * don't leak private hostnames), or 'unknown' (unparseable / local path).
+ * Stub for the analytics event. No-op in the fork.
  */
-function extractHost(urlOrSpec: string): string {
-  let host: string
-  const scpMatch = /^[^@/]+@([^:/]+):/.exec(urlOrSpec)
-  if (scpMatch) {
-    host = scpMatch[1]!
-  } else {
-    try {
-      host = new URL(urlOrSpec).hostname
-    } catch {
-      return 'unknown'
-    }
-  }
-  const normalized = host.toLowerCase()
-  return KNOWN_PUBLIC_HOSTS.has(normalized) ? normalized : 'other'
-}
-
-/**
- * True if the URL/spec points at anthropics/claude-plugins-official — the
- * repo GitHub complained about. Lets the dashboard separate "our problem"
- * traffic from user-configured marketplaces.
- */
-function isOfficialRepo(urlOrSpec: string): boolean {
-  return urlOrSpec.includes(`anthropics/${OFFICIAL_MARKETPLACE_NAME}`)
-}
-
 export function logPluginFetch(
-  source: PluginFetchSource,
-  urlOrSpec: string | undefined,
-  outcome: PluginFetchOutcome,
-  durationMs: number,
-  errorKind?: string,
+  _source: PluginFetchSource,
+  _urlOrSpec: string | undefined,
+  _outcome: PluginFetchOutcome,
+  _durationMs: number,
+  _errorKind?: string,
 ): void {
-  // String values are bounded enums / hostname-only — no code, no paths,
-  // no raw error messages. Same privacy envelope as tengu_web_fetch_host.
-  logEvent('tengu_plugin_remote_fetch', {
-    source: source as SafeString,
-    host: (urlOrSpec ? extractHost(urlOrSpec) : 'unknown') as SafeString,
-    is_official: urlOrSpec ? isOfficialRepo(urlOrSpec) : false,
-    outcome: outcome as SafeString,
-    duration_ms: Math.round(durationMs),
-    ...(errorKind && { error_kind: errorKind as SafeString }),
-  })
+  // No-op: telemetry is disabled in the fork.
 }
 
 /**
- * Classify an error into a stable bucket for the error_kind field. Keeps
- * cardinality bounded — raw error messages would explode dashboard grouping.
+ * Classify an error into a stable bucket for the error_kind field.
  *
- * Handles both axios Error objects (Node.js error codes like ENOTFOUND) and
- * git stderr strings (human phrases like "Could not resolve host"). DNS
- * checked BEFORE timeout because gitClone's error enhancement at
- * marketplaceManager.ts:~950 rewrites DNS failures to include the word
- * "timeout" — ordering the other way would misclassify git DNS as timeout.
+ * Pure utility — preserved so callers don't have to inline the
+ * regex categorization at every call site. The fork still benefits
+ * from having a stable "error kind" label for any local logging.
  */
 export function classifyFetchError(error: unknown): string {
   const msg = String((error as { message?: unknown })?.message ?? error)
@@ -125,9 +62,6 @@ export function classifyFetchError(error: unknown): string {
   if (/403|401|authentication|permission denied/i.test(msg)) return 'auth'
   if (/404|not found|repository not found/i.test(msg)) return 'not_found'
   if (/certificate|SSL|TLS|unable to get local issuer/i.test(msg)) return 'tls'
-  // Schema validation throws "Invalid response format" (install_counts) —
-  // distinguish from true unknowns so the dashboard can
-  // see "server sent garbage" separately.
   if (/Invalid response format|Invalid marketplace schema/i.test(msg)) {
     return 'invalid_schema'
   }

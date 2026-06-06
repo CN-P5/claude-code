@@ -7,7 +7,7 @@ describe('/daemon command', () => {
     expect(cmd.name).toBe('daemon')
     expect(cmd.type).toBe('local-jsx')
     expect(typeof cmd.load).toBe('function')
-    expect(cmd.description).toContain('daemon')
+    expect(cmd.description).toMatch(/daemon|守护进程/)
   })
 
   test('daemon module exports call function', async () => {

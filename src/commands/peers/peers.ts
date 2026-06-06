@@ -12,20 +12,20 @@ export const call: LocalCommandCall = async (_args, _context) => {
   const lines: string[] = []
 
   // Show own socket
-  lines.push(`Your socket: ${mySocket ?? '(not started)'}`)
+  lines.push(`你的 socket: ${mySocket ?? '（未启动）'}`)
   lines.push('')
 
   if (peers.length === 0) {
-    lines.push('No other Claude Code peers found.')
+    lines.push('未发现其他 Claude Code 对等节点。')
   } else {
-    lines.push(`Peers (${peers.length}):`)
+    lines.push(`对等节点（${peers.length} 个）：`)
     lines.push('')
 
     for (const peer of peers) {
       const alive = peer.messagingSocketPath
         ? await isPeerAlive(peer.messagingSocketPath)
         : false
-      const status = alive ? 'reachable' : 'unreachable'
+      const status = alive ? '可达' : '不可达'
       const label = peer.name ?? peer.kind ?? 'interactive'
       const cwd = peer.cwd ? `  cwd: ${peer.cwd}` : ''
       const age = peer.startedAt
@@ -46,7 +46,7 @@ export const call: LocalCommandCall = async (_args, _context) => {
 
   lines.push('')
   lines.push(
-    'To message a peer: use SendMessage with the shown uds:<socket-path> address',
+    '要向对等节点发送消息：使用 SendMessage 并指定显示的 uds:<socket-path> 地址',
   )
 
   return { type: 'text', value: lines.join('\n') }
@@ -55,10 +55,10 @@ export const call: LocalCommandCall = async (_args, _context) => {
 function formatAge(startedAt: number): string {
   const elapsed = Date.now() - startedAt
   const seconds = Math.floor(elapsed / 1000)
-  if (seconds < 60) return `${seconds}s ago`
+  if (seconds < 60) return `${seconds}秒前`
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return `${minutes}分钟前`
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
-  return `${hours}h ${remainingMinutes}m ago`
+  return `${hours}小时${remainingMinutes}分钟前`
 }

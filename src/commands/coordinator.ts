@@ -16,7 +16,7 @@ import type {
 const coordinator = {
   type: 'local-jsx',
   name: 'coordinator',
-  description: 'Toggle coordinator (multi-worker) mode',
+  description: '切换协调器（多 worker）模式',
   isEnabled: () => {
     if (feature('COORDINATOR_MODE')) {
       return true
@@ -36,21 +36,21 @@ const coordinator = {
         if (mod.isCoordinatorMode()) {
           // Disable: clear the env var
           delete process.env.CLAUDE_CODE_COORDINATOR_MODE
-          onDone('Coordinator mode disabled — back to normal mode', {
+          onDone('协调器模式已禁用 — 返回普通模式', {
             display: 'system',
             metaMessages: [
-              '<system-reminder>\nCoordinator mode is now disabled. You have access to all standard tools again. Work directly instead of dispatching to workers.\n</system-reminder>',
+              '<system-reminder>\n协调器模式现已禁用。你可以再次使用所有标准工具。直接工作而不是分派给 worker。\n</system-reminder>',
             ],
           })
         } else {
           // Enable: set the env var
           process.env.CLAUDE_CODE_COORDINATOR_MODE = '1'
           onDone(
-            'Coordinator mode enabled — use Agent(subagent_type: "worker") to dispatch tasks',
+            '协调器模式已启用 — 使用 Agent(subagent_type: "worker") 分派任务',
             {
               display: 'system',
               metaMessages: [
-                '<system-reminder>\nCoordinator mode is now enabled. You are an orchestrator. Use Agent({ subagent_type: "worker" }) to spawn workers, SendMessage to continue them, TaskStop to stop them. Do not use other tools directly.\n</system-reminder>',
+                '<system-reminder>\n协调器模式现已启用。你是一个协调器。使用 Agent({ subagent_type: "worker" }) 来生成 worker，使用 SendMessage 继续它们，使用 TaskStop 停止它们。不要直接使用其他工具。\n</system-reminder>',
               ],
             },
           )

@@ -90,7 +90,7 @@ export async function clearAuthRelatedCaches(): Promise<void> {
 export async function call(): Promise<React.ReactNode> {
   await performLogout({ clearOnboarding: true });
 
-  const message = <Text>Successfully logged out.</Text>;
+  const message = <Text>已成功退出登录。</Text>;
 
   setTimeout(() => {
     gracefulShutdownSync(0, 'logout');

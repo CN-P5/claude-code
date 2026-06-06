@@ -36,9 +36,9 @@ type ResumeResult =
 function resumeHelpMessage(result: ResumeResult): string {
   switch (result.resultType) {
     case 'sessionNotFound':
-      return `Session ${chalk.bold(result.arg)} was not found. Run ${chalk.bold('/resume')} without arguments to browse all sessions.`;
+      return `会话 ${chalk.bold(result.arg)} 未找到。运行 ${chalk.bold('/resume')} 不带参数以浏览所有会话。`;
     case 'multipleMatches':
-      return `Found ${result.count} sessions matching ${chalk.bold(result.arg)}. Run ${chalk.bold('/resume')} to pick one from the list.`;
+      return `找到 ${result.count} 个匹配 ${chalk.bold(result.arg)} 的会话。运行 ${chalk.bold('/resume')} 从列表中选择一个。`;
   }
 }
 
@@ -90,12 +90,12 @@ function ResumeCommand({
         const allLogs = allProjects ? await loadAllProjectsMessageLogs() : await loadSameRepoMessageLogs(paths);
         const resumable = filterResumableSessions(allLogs, getSessionId());
         if (resumable.length === 0) {
-          onDone('No conversations found to resume');
+          onDone('未找到可恢复的对话');
           return;
         }
         setLogs(resumable);
       } catch (_err) {
-        onDone('Failed to load conversations');
+        onDone('加载对话失败');
       } finally {
         setLoading(false);
       }
@@ -121,7 +121,7 @@ function ResumeCommand({
   async function handleSelect(log: LogOption) {
     const sessionId = validateUuid(getSessionIdFromLog(log));
     if (!sessionId) {
-      onDone('Failed to resume conversation');
+      onDone('恢复对话失败');
       return;
     }
 
@@ -145,12 +145,12 @@ function ResumeCommand({
       // Format the output message
       const message = [
         '',
-        'This conversation is from a different directory.',
+        '此对话来自不同的目录。',
         '',
-        'To resume, run:',
+        '要恢复，请运行：',
         `  ${(crossProjectCheck as { command: string }).command}`,
         '',
-        '(Command copied to clipboard)',
+        '（命令已复制到剪贴板）',
         '',
       ].join('\n');
 
@@ -164,14 +164,14 @@ function ResumeCommand({
   }
 
   function handleCancel() {
-    onDone('Resume cancelled', { display: 'system' });
+    onDone('已取消恢复', { display: 'system' });
   }
 
   if (loading) {
     return (
       <Box>
         <Spinner />
-        <Text> Loading conversations…</Text>
+        <Text> 正在加载对话…</Text>
       </Box>
     );
   }
@@ -180,7 +180,7 @@ function ResumeCommand({
     return (
       <Box>
         <Spinner />
-        <Text> Resuming conversation…</Text>
+        <Text> 正在恢复对话…</Text>
       </Box>
     );
   }
@@ -210,7 +210,7 @@ export const call: LocalJSXCommandCall = async (onDone, context, args) => {
       onDone(undefined, { display: 'skip' });
     } catch (error) {
       logError(error as Error);
-      onDone(`Failed to resume: ${(error as Error).message}`);
+      onDone(`恢复失败：${(error as Error).message}`);
     }
   };
 
@@ -225,7 +225,7 @@ export const call: LocalJSXCommandCall = async (onDone, context, args) => {
   const worktreePaths = await getWorktreePaths(getOriginalCwd());
   const logs = await loadSameRepoMessageLogs(worktreePaths);
   if (logs.length === 0) {
-    const message = 'No conversations found to resume.';
+    const message = '未找到可恢复的对话。';
     return <ResumeError message={message} args={arg} onDone={() => onDone(message)} />;
   }
 

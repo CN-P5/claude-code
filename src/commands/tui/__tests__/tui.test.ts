@@ -62,7 +62,7 @@ describe('tui command metadata', () => {
     const cmd = mod.default
     expect(cmd.name).toBe('tui')
     expect(cmd.type).toBe('local-jsx')
-    expect(cmd.description).toContain('flicker')
+    expect(cmd.description).toMatch(/flicker|闪烁/)
   })
 
   test('interactive and noninteractive entries are mutually gated', async () => {
@@ -113,7 +113,7 @@ describe('tui command metadata', () => {
     )
 
     expect(node).toBeNull()
-    expect(messages.join('\n')).toContain('TUI Mode Status')
+    expect(messages.join('\n')).toMatch(/TUI Mode Status|TUI 模式状态/)
   })
 })
 
@@ -121,7 +121,7 @@ describe('tui status subcommand', () => {
   test('reports disabled when no marker file', async () => {
     const result = await invokeCmd('status')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('disabled')
+    expect(result.value).toMatch(/disabled|已禁用/)
   })
 
   test('reports enabled when marker file exists', async () => {
@@ -133,7 +133,7 @@ describe('tui status subcommand', () => {
 
     const result = await invokeCmd('status')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('enabled')
+    expect(result.value).toMatch(/enabled|已启用/)
   })
 })
 
@@ -145,7 +145,7 @@ describe('tui on subcommand', () => {
 
     const result = await invokeCmd('on')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('enabled')
+    expect(result.value).toMatch(/enabled|已启用/)
     expect(existsSync(markerPath)).toBe(true)
   })
 
@@ -154,7 +154,7 @@ describe('tui on subcommand', () => {
     const result = await invokeCmd('on')
     expect(result.type).toBe('text')
     // Second call still returns a success message
-    expect(result.value).toContain('enabled')
+    expect(result.value).toMatch(/enabled|已启用/)
   })
 })
 
@@ -166,14 +166,14 @@ describe('tui off subcommand', () => {
 
     const result = await invokeCmd('off')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('disabled')
+    expect(result.value).toMatch(/disabled|已禁用/)
     expect(existsSync(getTuiMarkerPath())).toBe(false)
   })
 
   test('off when already off returns graceful message', async () => {
     const result = await invokeCmd('off')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('not active')
+    expect(result.value).toMatch(/not active|未处于活跃/)
   })
 })
 
@@ -182,7 +182,7 @@ describe('tui toggle subcommand', () => {
     const { getTuiMarkerPath } = await import('../index.js')
     const result = await invokeCmd('')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('enabled')
+    expect(result.value).toMatch(/enabled|已启用/)
     expect(existsSync(getTuiMarkerPath())).toBe(true)
   })
 
@@ -193,7 +193,7 @@ describe('tui toggle subcommand', () => {
 
     const result = await invokeCmd('')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('disabled')
+    expect(result.value).toMatch(/disabled|已禁用/)
     expect(existsSync(getTuiMarkerPath())).toBe(false)
   })
 })
@@ -202,7 +202,7 @@ describe('tui unknown subcommand', () => {
   test('returns usage text for unknown subcommand', async () => {
     const result = await invokeCmd('foobar')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('Usage')
+    expect(result.value).toMatch(/Usage|用法/)
   })
 })
 
@@ -219,14 +219,14 @@ describe('tui status env var display', () => {
   test('shows forced-on when CLAUDE_CODE_NO_FLICKER=1', async () => {
     process.env.CLAUDE_CODE_NO_FLICKER = '1'
     const result = await invokeCmd('status')
-    expect(result.value).toContain('forced on via env var')
+    expect(result.value).toMatch(/forced on via env var|通过环境变量强制开启/)
     delete process.env.CLAUDE_CODE_NO_FLICKER
   })
 
   test('shows forced-off when CLAUDE_CODE_NO_FLICKER=0', async () => {
     process.env.CLAUDE_CODE_NO_FLICKER = '0'
     const result = await invokeCmd('status')
-    expect(result.value).toContain('forced off via env var')
+    expect(result.value).toMatch(/forced off via env var|通过环境变量强制关闭/)
     delete process.env.CLAUDE_CODE_NO_FLICKER
   })
 })

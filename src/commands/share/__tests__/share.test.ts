@@ -200,7 +200,7 @@ describe('share command — parseShareArgs', () => {
     const call = await getCallFn()
     const result = await call('--unknown')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('Usage')
+    expect(result.value).toMatch(/Usage|用法/)
   })
 
   test('empty args → valid (default private) → log_not_found', async () => {
@@ -258,14 +258,14 @@ describe('share command — log not found', () => {
     const call = await getCallFn()
     const result = await call('--private')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('Session log not found')
+    expect(result.value).toMatch(/Session log not found|未找到会话日志/)
   })
 
   test('--public returns log_not_found when no log exists', async () => {
     const call = await getCallFn()
     const result = await call('--public')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('Session log not found')
+    expect(result.value).toMatch(/Session log not found|未找到会话日志/)
   })
 })
 
@@ -287,7 +287,7 @@ describe('share command — log exists', () => {
     const call = await getCallFn()
     const result = await call('--summary-only')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('No conversation content')
+    expect(result.value).toMatch(/No conversation content|未找到对话内容/)
   })
 
   test('log exists + --mask-secrets with API key → proceeds past log check', async () => {

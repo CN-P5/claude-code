@@ -4,8 +4,7 @@ const localMemoryCommand: Command = {
   type: 'local-jsx',
   name: 'local-memory',
   aliases: ['lm'],
-  description:
-    'Manage local memory stores for notes and context. Stored in ~/.claude/local-memory/ — no API key required.',
+  description: '管理本地记忆存储（笔记和上下文）。存储在 ~/.claude/local-memory/ — 无需 API 密钥。',
   // Avoid `<store>` / `<key>` / `<value>` in hint — REPL markdown renderer
   // strips angle-bracketed words as HTML tags. Uppercase placeholders are
   // visible. Same fix as /local-vault.

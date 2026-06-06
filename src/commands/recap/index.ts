@@ -42,19 +42,19 @@ const call: LocalCommandCall = async (_args, context) => {
     case 'no-turn':
       return {
         type: 'text',
-        value: 'Nothing to recap yet \u2014 send a message first.',
+        value: '暂无可回顾的内容 — 请先发送消息。',
       } satisfies LocalCommandResult
 
     case 'aborted':
       return {
         type: 'text',
-        value: 'Recap cancelled.',
+        value: '回顾已取消。',
       } satisfies LocalCommandResult
 
     case 'failed':
       return {
         type: 'text',
-        value: 'Couldn\u2019t generate a recap. Run with --debug for details.',
+        value: '无法生成回顾。使用 --debug 运行查看详情。',
       } satisfies LocalCommandResult
   }
 }
@@ -64,7 +64,7 @@ const call: LocalCommandCall = async (_args, context) => {
 const recap = {
   type: 'local',
   name: 'recap',
-  description: 'Generate a one-line session recap now',
+  description: '立即生成一行会话回顾',
   aliases: ['away', 'catchup'],
   /**
    * Enabled when:

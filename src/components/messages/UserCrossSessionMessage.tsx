@@ -20,7 +20,7 @@ export function UserCrossSessionMessage({ param, addMargin }: Props): React.Reac
   }
 
   const fromMatch = text.match(/from="([^"]*)"/);
-  const from = fromMatch?.[1] ?? 'another session';
+  const from = fromMatch?.[1] ?? '另一个会话';
 
   return (
     <Box flexDirection="row" marginTop={addMargin ? 1 : 0}>

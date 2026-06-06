@@ -123,7 +123,7 @@ describe('debug-tool-call command', () => {
     const result = await loaded.call('', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Debug Tool')
+      expect(result.value).toMatch(/Debug Tool|调试工具调用/)
     }
   })
 
@@ -155,7 +155,7 @@ describe('debug-tool-call command', () => {
     const result = await loaded.call('', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('No tool call')
+      expect(result.value).toMatch(/No tool call|没有工具调用|未找到工具调用/)
     }
   })
 
@@ -264,7 +264,7 @@ describe('debug-tool-call command', () => {
     expect(result.type).toBe('text')
     if (result.type === 'text') {
       // Should show 2 of 3 total
-      expect(result.value).toContain('Last 2 Tool Calls')
+      expect(result.value).toMatch(/Last 2 Tool Calls|最近 2 个工具调用/)
     }
   })
 
@@ -504,7 +504,7 @@ describe('debug-tool-call command', () => {
       }),
     ])
     // No pairs → "no tool call pairs found"
-    expect(out).toContain('No tool call')
+    expect(out).toMatch(/No tool call|没有工具调用|未找到工具调用/)
   })
 
   test('non-numeric N argument falls back to default 5', async () => {
@@ -525,8 +525,8 @@ describe('debug-tool-call command', () => {
     expect(result.type).toBe('text')
     if (result.type === 'text') {
       // Default is 5 → "Last 5 Tool Calls (of 7 total)"
-      expect(result.value).toContain('Last 5 Tool Calls')
-      expect(result.value).toContain('of 7 total')
+      expect(result.value).toMatch(/Last 5 Tool Calls|最近 5 个工具调用/)
+      expect(result.value).toMatch(/of 7 total|共 7 个/)
     }
   })
 
@@ -547,7 +547,7 @@ describe('debug-tool-call command', () => {
     const result = await loaded.call('0', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Last 5 Tool Calls')
+      expect(result.value).toMatch(/Last 5 Tool Calls|最近 5 个工具调用/)
     }
   })
 
@@ -568,7 +568,7 @@ describe('debug-tool-call command', () => {
     const result = await loaded.call('1', {} as never)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Last 1 Tool Call ')
+      expect(result.value).toMatch(/Last 1 Tool Call[^s]|最近 1 个工具调用/)
       expect(result.value).not.toContain('Last 1 Tool Calls')
     }
   })

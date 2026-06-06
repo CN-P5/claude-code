@@ -99,7 +99,7 @@ describe('callVault list', () => {
       {} as Parameters<typeof callVault>[1],
       'list',
     )
-    expect(onDoneMsg).toMatch(/1 vault/)
+    expect(onDoneMsg).toMatch(/1 vault|1 个保险库/)
     expect(result).not.toBeNull()
   })
 
@@ -114,7 +114,7 @@ describe('callVault list', () => {
       {} as Parameters<typeof callVault>[1],
       '',
     )
-    expect(onDoneMsg).toMatch(/no vaults/i)
+    expect(onDoneMsg).toMatch(/no vaults|未找到保险库/i)
   })
 
   test('API error shows error in onDone', async () => {
@@ -136,7 +136,7 @@ describe('callVault list', () => {
       {} as Parameters<typeof callVault>[1],
       'list',
     )
-    expect(onDoneMsg).toMatch(/failed|error|login|authenticate/i)
+    expect(onDoneMsg).toMatch(/failed|error|login|authenticate|失败/i)
   })
 })
 
@@ -156,7 +156,7 @@ describe('callVault create', () => {
       {} as Parameters<typeof callVault>[1],
       'create My Vault',
     )
-    expect(onDoneMsg).toMatch(/created/)
+    expect(onDoneMsg).toMatch(/created|已创建/)
     expect(onDoneMsg).toMatch(/vault_new/)
   })
 
@@ -190,7 +190,7 @@ describe('callVault get', () => {
       {} as Parameters<typeof callVault>[1],
       'get vault_123',
     )
-    expect(onDoneMsg).toMatch(/fetched/i)
+    expect(onDoneMsg).toMatch(/fetched|已获取/i)
     expect(result).not.toBeNull()
   })
 
@@ -228,7 +228,7 @@ describe('callVault archive', () => {
       {} as Parameters<typeof callVault>[1],
       'archive vault_arc',
     )
-    expect(onDoneMsg).toMatch(/archived/i)
+    expect(onDoneMsg).toMatch(/archived|已归档/i)
   })
 })
 
@@ -249,7 +249,7 @@ describe('callVault add-credential', () => {
       'add-credential vault_1 MY_SECRET the-actual-secret-value-xyz',
     )
     // onDone message must confirm credential added
-    expect(onDoneMsg).toMatch(/added|created/i)
+    expect(onDoneMsg).toMatch(/added|created|已添加/i)
     // SECURITY: the actual secret value must NOT appear in onDone message
     expect(onDoneMsg).not.toContain('the-actual-secret-value-xyz')
   })
@@ -308,7 +308,7 @@ describe('callVault archive-credential', () => {
       {} as Parameters<typeof callVault>[1],
       'archive-credential vault_1 cred_arc',
     )
-    expect(onDoneMsg).toMatch(/archived/i)
+    expect(onDoneMsg).toMatch(/archived|已归档/i)
   })
 
   test('archive-credential missing cred_id → invalid args', async () => {

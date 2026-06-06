@@ -1,114 +1,45 @@
 /**
  * Analytics sink implementation
  *
- * This module contains the actual analytics routing logic and should be
- * initialized during app startup. It routes events to Datadog and 1P event
- * logging.
- *
- * Usage: Call initializeAnalyticsSink() during app startup to attach the sink.
+ * Stubbed: all nonessential analytics traffic is disabled in the fork.
+ * Functions are kept for API compatibility — callers can still invoke
+ * initializeAnalyticsSink/initializeAnalyticsGates without effect.
  */
 
-import { trackDatadogEvent } from './datadog.js'
-import { logEventTo1P, shouldSampleEvent } from './firstPartyEventLogger.js'
-import { checkStatsigFeatureGate_CACHED_MAY_BE_STALE } from './growthbook.js'
 import { attachAnalyticsSink, stripProtoFields } from './index.js'
-import { isSinkKilled } from './sinkKillswitch.js'
 
 // Local type matching the logEvent metadata signature
 type LogEventMetadata = { [key: string]: boolean | number | undefined }
 
-const DATADOG_GATE_NAME = 'tengu_log_datadog_events'
-
-// Module-level gate state - starts undefined, initialized during startup
-let isDatadogGateEnabled: boolean | undefined
-
-/**
- * Check if Datadog tracking is enabled.
- * Falls back to cached value from previous session if not yet initialized.
- */
-function shouldTrackDatadog(): boolean {
-  if (isSinkKilled('datadog')) {
-    return false
-  }
-  if (isDatadogGateEnabled !== undefined) {
-    return isDatadogGateEnabled
-  }
-
-  // Fallback to cached value from previous session
-  try {
-    return checkStatsigFeatureGate_CACHED_MAY_BE_STALE(DATADOG_GATE_NAME)
-  } catch {
-    return false
-  }
-}
-
-/**
- * Log an event (synchronous implementation)
- */
-function logEventImpl(eventName: string, metadata: LogEventMetadata): void {
-  // Check if this event should be sampled
-  const sampleResult = shouldSampleEvent(eventName)
-
-  // If sample result is 0, the event was not selected for logging
-  if (sampleResult === 0) {
-    return
-  }
-
-  // If sample result is a positive number, add it to metadata
-  const metadataWithSampleRate =
-    sampleResult !== null
-      ? { ...metadata, sample_rate: sampleResult }
-      : metadata
-
-  if (shouldTrackDatadog()) {
-    // Datadog is a general-access backend — strip _PROTO_* keys
-    // (unredacted PII-tagged values meant only for the 1P privileged column).
-    void trackDatadogEvent(eventName, stripProtoFields(metadataWithSampleRate))
-  }
-
-  // 1P receives the full payload including _PROTO_* — the exporter
-  // destructures and routes those keys to proto fields itself.
-  logEventTo1P(eventName, metadataWithSampleRate)
-}
-
-/**
- * Log an event (asynchronous implementation)
- *
- * With Segment removed the two remaining sinks are fire-and-forget, so this
- * just wraps the sync impl — kept to preserve the sink interface contract.
- */
-function logEventAsyncImpl(
-  eventName: string,
-  metadata: LogEventMetadata,
-): Promise<void> {
-  logEventImpl(eventName, metadata)
-  return Promise.resolve()
-}
-
 /**
  * Initialize analytics gates during startup.
  *
- * Updates gate values from server. Early events use cached values from previous
- * session to avoid data loss during initialization.
- *
- * Called from main.tsx during setupBackend().
+ * No-op in the fork — there are no remote gates to read.
  */
 export function initializeAnalyticsGates(): void {
-  isDatadogGateEnabled =
-    checkStatsigFeatureGate_CACHED_MAY_BE_STALE(DATADOG_GATE_NAME)
+  // No-op: gates are read from LOCAL_GATE_DEFAULTS only.
 }
 
 /**
  * Initialize the analytics sink.
  *
- * Call this during app startup to attach the analytics backend.
- * Any events logged before this is called will be queued and drained.
- *
- * Idempotent: safe to call multiple times (subsequent calls are no-ops).
+ * No-op in the fork — events are dropped at logEvent().
+ * Kept for API compatibility with callers that may still invoke it.
  */
 export function initializeAnalyticsSink(): void {
+  // No-op: there is no remote sink to attach. Events go to the
+  // no-op queue in ./index.ts and are silently dropped.
+  // We still call attachAnalyticsSink to drain any pre-attach queue
+  // (in the fork, the queue is also a no-op, but this preserves
+  // the contract).
   attachAnalyticsSink({
-    logEvent: logEventImpl,
-    logEventAsync: logEventAsyncImpl,
+    logEvent: () => {},
+    logEventAsync: async () => {},
   })
 }
+
+// Re-export for callers that need stripProtoFields
+export { stripProtoFields }
+
+// Re-export internal type so the public surface matches the previous shape.
+export type { LogEventMetadata }

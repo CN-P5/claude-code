@@ -82,9 +82,9 @@ async function copyOrWriteToFile(text: string, filename: string): Promise<string
   // terminal support), so the file provides a reliable fallback.
   try {
     const filePath = await writeToFile(text, filename);
-    return `Copied to clipboard (${charCount} characters, ${lineCount} lines)\nAlso written to ${filePath}`;
+    return `已复制到剪贴板（${charCount} 个字符，${lineCount} 行）\n同时写入 ${filePath}`;
   } catch {
-    return `Copied to clipboard (${charCount} characters, ${lineCount} lines)`;
+    return `已复制到剪贴板（${charCount} 个字符，${lineCount} 行）`;
   }
 }
 
@@ -119,7 +119,7 @@ function CopyPicker({ fullText, codeBlocks, messageAge, onDone }: PickerProps): 
 
   const options: OptionWithDescription<PickerSelection>[] = [
     {
-      label: 'Full response',
+      label: '完整回复',
       value: 'full' as const,
       description: `${fullText.length} chars, ${countCharInString(fullText, '\n') + 1} lines`,
     },
@@ -129,13 +129,13 @@ function CopyPicker({ fullText, codeBlocks, messageAge, onDone }: PickerProps): 
         label: truncateLine(block.code, 60),
         value: index,
         description:
-          [block.lang, blockLines > 1 ? `${blockLines} lines` : undefined].filter(Boolean).join(', ') || undefined,
+          [block.lang, blockLines > 1 ? `${blockLines} 行` : undefined].filter(Boolean).join(', ') || undefined,
       };
     }),
     {
-      label: 'Always copy full response',
+      label: '始终复制完整回复',
       value: 'always' as const,
-      description: 'Skip this picker in the future (revert via /config)',
+      description: '以后跳过此选择器（通过 /config 恢复）',
     },
   ];
 
@@ -167,7 +167,7 @@ function CopyPicker({ fullText, codeBlocks, messageAge, onDone }: PickerProps): 
         message_age: messageAge,
       });
       const result = await copyOrWriteToFile(content.text, content.filename);
-      onDone(`${result}\nPreference saved. Use /config to change copyFullResponse`);
+      onDone(`${result}\n偏好已保存。使用 /config 更改 copyFullResponse`);
       return;
     }
     logEvent('tengu_copy', {
@@ -189,9 +189,9 @@ function CopyPicker({ fullText, codeBlocks, messageAge, onDone }: PickerProps): 
     });
     try {
       const filePath = await writeToFile(content.text, content.filename);
-      onDone(`Written to ${filePath}`);
+      onDone(`已写入 ${filePath}`);
     } catch (e) {
-      onDone(`Failed to write file: ${e instanceof Error ? e.message : e}`);
+      onDone(`写入文件失败：${e instanceof Error ? e.message : e}`);
     }
   }
 
@@ -205,7 +205,7 @@ function CopyPicker({ fullText, codeBlocks, messageAge, onDone }: PickerProps): 
   return (
     <Pane>
       <Box flexDirection="column" gap={1} tabIndex={0} autoFocus onKeyDown={handleKeyDown}>
-        <Text dimColor>Select content to copy:</Text>
+        <Text dimColor>选择要复制的内容：</Text>
         <Select<PickerSelection>
           options={options}
           hideIndexes={false}
@@ -216,7 +216,7 @@ function CopyPicker({ fullText, codeBlocks, messageAge, onDone }: PickerProps): 
             void handleSelect(selected);
           }}
           onCancel={() => {
-            onDone('Copy cancelled', { display: 'system' });
+            onDone('已取消复制', { display: 'system' });
           }}
         />
         <Text dimColor>
@@ -235,7 +235,7 @@ export const call: LocalJSXCommandCall = async (onDone, context, args) => {
   const texts = collectRecentAssistantTexts(context.messages);
 
   if (texts.length === 0) {
-    onDone('No assistant message to copy');
+    onDone('没有可复制的助手消息');
     return null;
   }
 
@@ -245,11 +245,11 @@ export const call: LocalJSXCommandCall = async (onDone, context, args) => {
   if (arg) {
     const n = Number(arg);
     if (!Number.isInteger(n) || n < 1) {
-      onDone(`Usage: /copy [N] where N is 1 (latest), 2, 3, \u2026 Got: ${arg}`);
+      onDone(`用法：/copy [N]，其中 N 为 1（最新）、2、3… 收到：${arg}`);
       return null;
     }
     if (n > texts.length) {
-      onDone(`Only ${texts.length} assistant ${texts.length === 1 ? 'message' : 'messages'} available to copy`);
+      onDone(`只有 ${texts.length} 条助手消息可复制`);
       return null;
     }
     age = n - 1;

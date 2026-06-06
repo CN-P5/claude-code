@@ -6,7 +6,7 @@ const memoryStoresCommand: Command = {
   name: 'memory-stores',
   aliases: ['mem', 'mstore'],
   description:
-    'Manage remote memory stores (cross-device memory persistence). Requires Claude Pro/Max/Team subscription.',
+    '管理远程记忆存储（跨设备记忆持久化）。需要 Claude Pro/Max/Team 订阅。',
   // REPL markdown renderer strips `<...>` as HTML tags — use uppercase.
   argumentHint:
     'list | get ID | create NAME | archive ID | memories STORE_ID | create-memory STORE_ID CONTENT | get-memory STORE_ID MEMORY_ID | update-memory STORE_ID MEMORY_ID CONTENT | delete-memory STORE_ID MEMORY_ID | versions STORE_ID | redact STORE_ID VERSION_ID',

@@ -4,7 +4,7 @@ import { isSkillSearchCompiledIn } from '../../services/skillSearch/featureCheck
 const skillSearch = {
   type: 'local-jsx',
   name: 'skill-search',
-  description: 'Control automatic skill matching during conversations',
+  description: '控制对话期间的自动技能匹配',
   argumentHint: '[start|stop|about|status]',
   // Visible whenever the subsystem is compiled in (build flag); runtime
   // activation is separate and operator-controlled via /skill-search start.

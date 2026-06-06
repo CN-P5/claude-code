@@ -3,10 +3,9 @@ import type { Command } from '../commands.js'
 const command = {
   type: 'prompt',
   name: 'init-verifiers',
-  description:
-    'Create verifier skill(s) for automated verification of code changes',
+  description: '为代码更改的自动验证创建验证器技能',
   contentLength: 0, // Dynamic content
-  progressMessage: 'analyzing your project and creating verifier skills',
+  progressMessage: '正在分析项目并创建验证器技能',
   source: 'builtin',
   async getPromptForCommand() {
     return [

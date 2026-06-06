@@ -90,3 +90,15 @@ declare module '*.css' {
   const content: string
   export default content
 }
+// Native binary imports — `import ... with { type: 'file' }` returns a
+// path string at build time (Bun embeds the file in compiled mode and
+// keeps the literal path in dev). We need a TS declaration so the
+// resolver accepts the import; the runtime does the rest.
+declare module '*.exe' {
+  const path: string
+  export default path
+}
+declare module '*.node' {
+  const path: string
+  export default path
+}

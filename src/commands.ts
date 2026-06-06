@@ -36,7 +36,6 @@ import mcp from './commands/mcp/index.js'
 import mobile from './commands/mobile/index.js'
 import onboarding from './commands/onboarding/index.js'
 import pr_comments from './commands/pr_comments/index.js'
-import releaseNotes from './commands/release-notes/index.js'
 import rename from './commands/rename/index.js'
 import resume from './commands/resume/index.js'
 import review, { ultrareview } from './commands/review.js'
@@ -332,7 +331,6 @@ const COMMANDS = memoize((): Command[] => [
   remoteEnv,
   plugin,
   pr_comments,
-  releaseNotes,
   reloadPlugins,
   rename,
   resume,
@@ -724,14 +722,15 @@ export const REMOTE_SAFE_COMMANDS: Set<Command> = new Set([
  * here. Default is blocked.
  */
 export const BRIDGE_SAFE_COMMANDS: Set<Command> = new Set(
-  [
-    compact, // Shrink context — useful mid-session from a phone
-    clear, // Wipe transcript
-    usage, // Show session cost (/cost alias)
-    summary, // Summarize conversation
-    releaseNotes, // Show changelog
-    files, // List tracked files
-  ].filter((c): c is Command => c !== null),
+  (
+    [
+      compact, // Shrink context — useful mid-session from a phone
+      clear, // Wipe transcript
+      usage, // Show session cost (/cost alias)
+      summary, // Summarize conversation
+      files, // List tracked files
+    ] as Command[]
+  ).filter((c): c is Command => c !== null),
 )
 
 /**

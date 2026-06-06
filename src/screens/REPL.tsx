@@ -218,7 +218,6 @@ import { getScratchpadDir, isScratchpadEnabled } from '../utils/permissions/file
 import { WEB_FETCH_TOOL_NAME } from '@claude-code-best/builtin-tools/tools/WebFetchTool/prompt.js';
 import { SLEEP_TOOL_NAME } from '@claude-code-best/builtin-tools/tools/SleepTool/prompt.js';
 import { clearSpeculativeChecks } from '@claude-code-best/builtin-tools/tools/BashTool/bashPermissions.js';
-import type { AutoUpdaterResult } from '../utils/autoUpdater.js';
 import { getGlobalConfig, saveGlobalConfig, getGlobalConfigWriteCount } from '../utils/config.js';
 import { hasConsoleBillingAccess } from '../utils/billing.js';
 import {
@@ -422,7 +421,6 @@ import { useFeedbackSurvey } from 'src/components/FeedbackSurvey/useFeedbackSurv
 import { useMemorySurvey } from 'src/components/FeedbackSurvey/useMemorySurvey.js';
 import { usePostCompactSurvey } from 'src/components/FeedbackSurvey/usePostCompactSurvey.js';
 import { FeedbackSurvey } from 'src/components/FeedbackSurvey/FeedbackSurvey.js';
-import { useInstallMessages } from 'src/hooks/notifs/useInstallMessages.js';
 import { useAwaySummary } from 'src/hooks/useAwaySummary.js';
 import { useChromeExtensionNotification } from 'src/hooks/useChromeExtensionNotification.js';
 import { useOfficialMarketplaceNotification } from 'src/hooks/useOfficialMarketplaceNotification.js';
@@ -453,7 +451,7 @@ import {
   shouldShowDesktopUpsellStartup,
 } from 'src/components/DesktopUpsell/DesktopUpsellStartup.js';
 import { usePluginInstallationStatus } from 'src/hooks/notifs/usePluginInstallationStatus.js';
-import { usePluginAutoupdateNotification } from 'src/hooks/notifs/usePluginAutoupdateNotification.js';
+// Plugin autoupdate notification removed
 import { performStartupChecks } from 'src/utils/plugins/performStartupChecks.js';
 import { UserTextMessage } from 'src/components/messages/UserTextMessage.js';
 import { AwsAuthStatusBox } from '../components/AwsAuthStatusBox.js';
@@ -571,14 +569,14 @@ function TranscriptModeFooter({
       width="100%"
     >
       <Text dimColor>
-        Showing detailed transcript · {toggleShortcut} to toggle
+        正在显示详细记录 · 按 {toggleShortcut} 切换
         {searchBadge
-          ? ' · n/N to navigate'
+          ? ' · n/N 上下跳转'
           : virtualScroll
-            ? ` · ${figures.arrowUp}${figures.arrowDown} scroll · home/end top/bottom`
+            ? ` · ${figures.arrowUp}${figures.arrowDown} 滚动 · home/end 跳转首尾`
             : suppressShowAll
               ? ''
-              : ` · ${showAllShortcut} to ${showAllInTranscript ? 'collapse' : 'show all'}`}
+              : ` · 按 ${showAllShortcut} ${showAllInTranscript ? '折叠' : '展开全部'}`}
       </Text>
       {status ? (
         // v-for-editor render progress — transient, preempts the search
@@ -705,11 +703,11 @@ function TranscriptSearchBar({
       {off < query.length && <Text>{query.slice(off + 1)}</Text>}
       <Box flexGrow={1} />
       {indexStatus === 'building' ? (
-        <Text dimColor>indexing… </Text>
+        <Text dimColor>正在索引… </Text>
       ) : indexStatus ? (
-        <Text dimColor>indexed in {indexStatus.ms}ms </Text>
+        <Text dimColor>索引完成，耗时 {indexStatus.ms} 毫秒 </Text>
       ) : count === 0 && query ? (
-        <Text color="error">no matches </Text>
+        <Text color="error">未找到匹配 </Text>
       ) : count > 0 ? (
         // Engine-counted (indexOf on extractSearchText). May drift from
         // render-count for ghost/phantom messages — badge is a rough
@@ -1024,14 +1022,13 @@ export function REPL({
   useIDEStatusIndicator({ ideSelection, mcpClients, ideInstallationStatus });
   useMcpConnectivityStatus({ mcpClients });
   usePluginInstallationStatus();
-  usePluginAutoupdateNotification();
+  // usePluginAutoupdateNotification removed
   useSettingsErrors();
   useRateLimitWarningNotification(mainLoopModel);
   useFastModeNotification();
   useDeprecationWarningNotification(mainLoopModel);
   useNpmDeprecationNotification();
   useAntOrgWarningNotification();
-  useInstallMessages();
   useChromeExtensionNotification();
   useOfficialMarketplaceNotification();
   useLspInitializationNotification();
@@ -1245,20 +1242,6 @@ export function REPL({
   // don't accidentally dismiss or answer a permission prompt the user hasn't read yet.
   const [isPromptInputActive, setIsPromptInputActive] = React.useState(false);
 
-  const [autoUpdaterResult, setAutoUpdaterResult] = useState<AutoUpdaterResult | null>(null);
-
-  useEffect(() => {
-    if (autoUpdaterResult?.notifications) {
-      autoUpdaterResult.notifications.forEach(notification => {
-        addNotification({
-          key: 'auto-updater-notification',
-          text: notification,
-          priority: 'low',
-        });
-      });
-    }
-  }, [autoUpdaterResult, addNotification]);
-
   // tmux + fullscreen + `mouse off`: one-time hint that wheel won't scroll.
   // We no longer mutate tmux's session-scoped mouse option (it poisoned
   // sibling panes); tmux users already know this tradeoff from vim/less.
@@ -1428,14 +1411,14 @@ export function REPL({
     sessionStatus !== 'waiting'
       ? undefined
       : toolUseConfirmQueue.length > 0
-        ? `approve ${toolUseConfirmQueue[0]!.tool.name}`
+        ? `等待批准 ${toolUseConfirmQueue[0]!.tool.name}`
         : pendingWorkerRequest
-          ? 'worker request'
+          ? '等待 worker 请求'
           : pendingSandboxRequest
-            ? 'sandbox request'
+            ? '等待沙箱请求'
             : isShowingLocalJSXCommand
-              ? 'dialog open'
-              : 'input needed';
+              ? '对话框已打开'
+              : '等待输入';
 
   // Push status to the PID file for `claude ps`. Fire-and-forget; ps falls
   // back to transcript-tail derivation when this is missing/stale.
@@ -2549,7 +2532,7 @@ export function REPL({
     } else if (focusedInputDialog === 'prompt') {
       // Reject all pending prompts and clear the queue
       for (const item of promptQueue) {
-        item.reject(new Error('Prompt cancelled by user'));
+        item.reject(new Error('提示已被用户取消'));
       }
       setPromptQueue([]);
       abortController?.abort('user-cancel');
@@ -2744,8 +2727,8 @@ export function REPL({
     if (!reason) return;
     if (SandboxManager.isSandboxRequired()) {
       process.stderr.write(
-        `\nError: sandbox required but unavailable: ${reason}\n` +
-          `  sandbox.failIfUnavailable is set — refusing to start without a working sandbox.\n\n`,
+        `\n错误：需要沙箱但不可用：${reason}\n` +
+          `  sandbox.failIfUnavailable 已设置——拒绝在没有可用沙箱的情况下启动。\n\n`,
       );
       gracefulShutdownSync(1, 'other');
       return;
@@ -2755,8 +2738,8 @@ export function REPL({
       key: 'sandbox-unavailable',
       jsx: (
         <>
-          <Text color="warning">sandbox disabled</Text>
-          <Text dimColor> · /sandbox</Text>
+          <Text color="warning">沙箱已禁用</Text>
+          <Text dimColor> · /sandbox 了解更多</Text>
         </>
       ),
       priority: 'medium',
@@ -2767,7 +2750,7 @@ export function REPL({
     // If sandboxing is enabled (setting.sandbox is defined, initialise the manager)
     SandboxManager.initialize(sandboxAskCallback).catch(err => {
       // Initialization/validation failed - display error and exit
-      process.stderr.write(`\n❌ Sandbox Error: ${errorMessage(err)}\n`);
+      process.stderr.write(`\n❌ 沙箱错误：${errorMessage(err)}\n`);
       gracefulShutdownSync(1, 'other');
     });
   }
@@ -2933,14 +2916,14 @@ export function REPL({
               setSpinnerShimmerColor('claudeBlueShimmer_FOR_SYSTEM_SPINNER');
               setSpinnerMessage(
                 event.hookType === 'pre_compact'
-                  ? 'Running PreCompact hooks\u2026'
+                  ? '正在运行 PreCompact 钩子\u2026'
                   : event.hookType === 'post_compact'
-                    ? 'Running PostCompact hooks\u2026'
-                    : 'Running SessionStart hooks\u2026',
+                    ? '正在运行 PostCompact 钩子\u2026'
+                    : '正在运行 SessionStart 钩子\u2026',
               );
               break;
             case 'compact_start':
-              setSpinnerMessage('Compacting conversation');
+              setSpinnerMessage('正在压缩对话');
               break;
             case 'compact_end':
               setSpinnerMessage(null);
@@ -3184,7 +3167,7 @@ export function REPL({
               pipeReturnHadErrorRef.current = true;
               relayPipeMessage({
                 type: 'error',
-                data: text || 'Slave request failed',
+                data: text || '子进程请求失败',
               });
             } else if (text) {
               relayPipeMessage({ type: 'stream', data: text });
@@ -3433,7 +3416,7 @@ export function REPL({
           pipeReturnHadErrorRef.current = true;
           relayPipeMessage({
             type: 'error',
-            data: 'Slave request was interrupted before completion.',
+            data: '子进程请求在完成前被中断。',
           });
         }
       }
@@ -4350,7 +4333,7 @@ export function REPL({
             logForDebugging(`resumeAgentBackground failed: ${errorMessage(err)}`);
             addNotification({
               key: `resume-agent-failed-${task.id}`,
-              jsx: <Text color="error">Failed to resume agent: {errorMessage(err)}</Text>,
+              jsx: <Text color="error">恢复 agent 失败：{errorMessage(err)}</Text>,
               priority: 'low',
             });
           });
@@ -4571,7 +4554,7 @@ export function REPL({
         addNotification({
           // Same key as text-selection copy — repeated copies replace toast, don't queue.
           key: 'selection-copied',
-          text: 'copied',
+          text: '已复制',
           color: 'success',
           priority: 'immediate',
           timeoutMs: 2000,
@@ -4774,7 +4757,7 @@ export function REPL({
         ) {
           void sendNotification(
             {
-              message: 'Claude is waiting for your input',
+              message: 'Claude 正在等待您的输入',
               notificationType: 'idle_prompt',
             },
             terminal,
@@ -4820,13 +4803,13 @@ export function REPL({
           jsx:
             mode === 'hint_v2' ? (
               <>
-                <Text dimColor>new task? </Text>
+                <Text dimColor>新任务？</Text>
                 <Text color="suggestion">/clear</Text>
-                <Text dimColor> to save </Text>
-                <Text color="suggestion">{formattedTokens} tokens</Text>
+                <Text dimColor> 以节省 </Text>
+                <Text color="suggestion">{formattedTokens} 个 token</Text>
               </>
             ) : (
-              <Text color="warning">new task? /clear to save {formattedTokens} tokens</Text>
+              <Text color="warning">新任务？输入 /clear 以节省 {formattedTokens} 个 token</Text>
             ),
           priority: 'medium',
           // Persist until submit — the hint fires at T+75min idle, user may
@@ -5087,7 +5070,7 @@ export function REPL({
     const handleSuspend = () => {
       // Print suspension instructions
       process.stdout.write(
-        `\nClaude Code has been suspended. Run \`fg\` to bring Claude Code back.\nNote: ctrl + z now suspends Claude Code, ctrl + _ undoes input.\n`,
+        `\nClaude Code 已被挂起。运行 \`fg\` 可将 Claude Code 恢复到前台。\n注意：ctrl + z 现在挂起 Claude Code，ctrl + _ 撤销输入。\n`,
       );
     };
 
@@ -5288,7 +5271,7 @@ export function REPL({
           clearTimeout(editorTimerRef.current);
           setEditorStatus(s);
         };
-        setStatus(`rendering ${deferredMessages.length} messages…`);
+        setStatus(`正在渲染 ${deferredMessages.length} 条消息…`);
         void (async () => {
           try {
             // Width = terminal minus vim's line-number gutter (4 digits +
@@ -5302,9 +5285,9 @@ export function REPL({
             const path = join(tmpdir(), `cc-transcript-${Date.now()}.txt`);
             await writeFile(path, text);
             const opened = openFileInExternalEditor(path);
-            setStatus(opened ? `opening ${path}` : `wrote ${path} · no $VISUAL/$EDITOR set`);
+            setStatus(opened ? `正在打开 ${path}` : `已写入 ${path} · 未设置 $VISUAL/$EDITOR`);
           } catch (e) {
-            setStatus(`render failed: ${e instanceof Error ? e.message : String(e)}`);
+            setStatus(`渲染失败：${e instanceof Error ? e.message : String(e)}`);
           }
           editorRenderingRef.current = false;
           if (gen !== editorGenRef.current) return;
@@ -5940,7 +5923,7 @@ export function REPL({
                     onAbort={() => {
                       const item = promptQueue[0];
                       if (!item) return;
-                      item.reject(new Error('Prompt cancelled by user'));
+                      item.reject(new Error('提示已被用户取消'));
                       setPromptQueue(([, ...tail]) => tail);
                     }}
                   />
@@ -5955,8 +5938,8 @@ export function REPL({
                 {/* Show pending indicator for sandbox permission on worker side */}
                 {pendingSandboxRequest && (
                   <WorkerPendingPermission
-                    toolName="Network Access"
-                    description={`Waiting for leader to approve network access to ${pendingSandboxRequest.host}`}
+                    toolName="网络访问"
+                    description={`正在等待 leader 批准对 ${pendingSandboxRequest.host} 的网络访问`}
                   />
                 )}
                 {/* Worker sandbox permission requests from swarm workers */}
@@ -6303,7 +6286,7 @@ export function REPL({
                         inputValue={inputValue}
                         setInputValue={setInputValue}
                         onRequestFeedback={handleSurveyRequestFeedback}
-                        message="How well did Claude use its memory? (optional)"
+                        message="Claude 对其记忆的使用效果如何？（可选）"
                       />
                     ) : (
                       <FeedbackSurvey
@@ -6355,8 +6338,6 @@ export function REPL({
                       onExit={handleExit}
                       verbose={verbose}
                       messages={messages}
-                      onAutoUpdaterResult={setAutoUpdaterResult}
-                      autoUpdaterResult={autoUpdaterResult}
                       input={inputValue}
                       onInputChange={setInputValue}
                       mode={inputMode}
@@ -6426,7 +6407,7 @@ export function REPL({
                         setMessages(prev => [
                           ...prev,
                           createSystemMessage(
-                            'That message is no longer in the active context (snipped or pre-compact). Choose a more recent message.',
+                            '该消息已不在当前上下文中（已被截断或在压缩前）。请选择更近的消息。',
                             'warning',
                           ),
                         ]);
@@ -6511,7 +6492,7 @@ export function REPL({
                       const historyShortcut = getShortcutDisplay('app:toggleTranscript', 'Global', 'ctrl+o');
                       addNotification({
                         key: 'summarize-ctrl-o-hint',
-                        text: `Conversation summarized (${historyShortcut} for history)`,
+                        text: `对话已总结（按 ${historyShortcut} 查看历史）`,
                         priority: 'medium',
                         timeoutMs: 8000,
                       });

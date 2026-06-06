@@ -3045,9 +3045,9 @@ function safeKeys(obj: Record<string, unknown> | undefined | null): string[] {
 const usageReport: Command = {
   type: 'prompt',
   name: 'insights',
-  description: 'Generate a report analyzing your Claude Code sessions',
+  description: '生成分析你的 Claude Code 会话的报告',
   contentLength: 0, // Dynamic content
-  progressMessage: 'analyzing your sessions',
+  progressMessage: '正在分析你的会话',
   source: 'builtin',
   async getPromptForCommand(args) {
     let collectRemote = false

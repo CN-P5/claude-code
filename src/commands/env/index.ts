@@ -59,7 +59,7 @@ function formatEnvVars(): string {
     .sort(([a], [b]) => a.localeCompare(b))
 
   if (entries.length === 0) {
-    return '  (no recognized env vars set)'
+    return '  （未设置已识别的环境变量）'
   }
   return entries.map(([k, v]) => `  ${k}=${v}`).join('\n')
 }
@@ -79,20 +79,20 @@ function formatRuntime(): string {
 const env: Command = {
   type: 'local',
   name: 'env',
-  description: 'Show current environment, runtime, and feature flags',
+  description: '显示当前环境、运行时和特性标志',
   isHidden: false,
   isEnabled: () => true,
   supportsNonInteractive: true,
   load: async () => ({
     call: async (): Promise<LocalCommandResult> => {
       const text = [
-        '## Runtime',
+        '## 运行时',
         formatRuntime(),
         '',
-        '## Environment Variables (allowlisted prefixes)',
+        '## 环境变量（白名单前缀）',
         formatEnvVars(),
         '',
-        '_Secrets matching token/password/auth/api_key are masked. Set additional `CLAUDE_*` / `FEATURE_*` env vars to see them here._',
+        '_匹配 token/password/auth/api_key 的密钥已脱敏。设置额外的 `CLAUDE_*` / `FEATURE_*` 环境变量可在此处显示。_',
       ].join('\n')
       return { type: 'text', value: text }
     },

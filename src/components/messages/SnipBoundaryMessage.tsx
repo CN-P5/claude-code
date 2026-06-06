@@ -13,7 +13,7 @@ export function SnipBoundaryMessage({ message }: Props): React.ReactNode {
   const content =
     typeof (message as Record<string, unknown>).content === 'string'
       ? ((message as Record<string, unknown>).content as string)
-      : '[snip] Conversation history before this point has been snipped.';
+      : '[已截断] 此处之前的对话历史已被截断。';
 
   return (
     <Box marginTop={1} marginBottom={1}>

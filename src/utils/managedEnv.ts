@@ -1,4 +1,3 @@
-import { isRemoteManagedSettingsEligible } from '../services/remoteManagedSettings/syncCache.js'
 import { clearCACertsCache } from './caCerts.js'
 import { getGlobalConfig } from './config.js'
 import { isEnvTruthy } from './envUtils.js'
@@ -149,13 +148,14 @@ export function applySafeConfigEnvironmentVariables(): void {
   }
 
   // Compute remote-managed-settings eligibility now, with userSettings and
-  // flagSettings env applied. Eligibility reads CLAUDE_CODE_USE_BEDROCK,
-  // ANTHROPIC_BASE_URL — both settable via settings.env.
-  // getSettingsForSource('policySettings') below consults the remote cache,
-  // which guards on this. The two-phase structure makes the ordering
-  // dependency visible: non-policy env → eligibility → policy env.
-  isRemoteManagedSettingsEligible()
-
+  // flagSettings env applied. In the fork, remote managed settings is
+  // always disabled, so the eligibility call is a no-op (the stubbed
+  // isEligibleForRemoteManagedSettings() returns false). The two-phase
+  // ordering is preserved so policySettings env below is still consumed
+  // — it can be populated by the local managed-settings file even
+  // without a remote source.
+  // Original call: isRemoteManagedSettingsEligible() (deleted with
+  // syncCache.ts). Stub has been removed here.
   Object.assign(
     process.env,
     filterSettingsEnv(getSettingsForSource('policySettings')?.env),

@@ -63,7 +63,7 @@ export async function call(onDone: LocalJSXCommandOnDone, context: LocalJSXComma
             authVersion: prev.authVersion + 1,
           }));
         }
-        onDone(success ? 'Login successful' : 'Login interrupted');
+        onDone(success ? '登录成功' : '登录已中断');
       }}
     />
   );
@@ -108,7 +108,7 @@ export function Login(props: {
             } catch (err) {
               setRemoveState({
                 phase: 'error',
-                message: err instanceof Error ? err.message : 'Failed to remove workspace API key',
+                message: err instanceof Error ? err.message : '删除工作区 API 密钥失败',
               });
             }
           })();
@@ -142,12 +142,12 @@ export function Login(props: {
 
   return (
     <Dialog
-      title="Login"
+      title="登录"
       onCancel={() => props.onDone(false, mainLoopModel)}
       color="permission"
       inputGuide={exitState =>
         exitState.pending ? (
-          <Text>Press {exitState.keyName} again to exit</Text>
+          <Text>再次按 {exitState.keyName} 退出</Text>
         ) : (
           <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="cancel" />
         )
@@ -165,20 +165,20 @@ export function Login(props: {
         ) : removeState.phase === 'confirm-remove' || removeState.phase === 'removing' ? (
           <Box flexDirection="column" marginBottom={1}>
             <Text>
-              Remove the saved workspace API key? <Text dimColor>(settings.json only — env var is unaffected)</Text>
+              删除已保存的工作区 API 密钥？<Text dimColor>（仅影响 settings.json — 环境变量不受影响）</Text>
             </Text>
-            <Text dimColor>{removeState.phase === 'removing' ? 'Removing…' : 'Press Y to confirm, N to cancel'}</Text>
+            <Text dimColor>{removeState.phase === 'removing' ? '正在删除…' : '按 Y 确认，按 N 取消'}</Text>
           </Box>
         ) : (
           <>
             <Box flexDirection="column" marginBottom={1}>
               {!workspaceKeySet ? (
-                <Text dimColor>Press W to enter workspace API key (saves to settings, no restart needed)</Text>
+                <Text dimColor>按 W 输入工作区 API 密钥（保存到 settings，无需重启）</Text>
               ) : workspaceKeyFromSettings ? (
-                <Text dimColor>Press W to replace workspace API key · Press D to remove it</Text>
+                <Text dimColor>按 W 替换工作区 API 密钥 · 按 D 删除</Text>
               ) : (
                 <Text dimColor>
-                  Workspace API key from ANTHROPIC_API_KEY env. Press W to override with a settings-saved key.
+                  来自 ANTHROPIC_API_KEY 环境变量的工作区 API 密钥。按 W 使用 settings 中保存的密钥覆盖。
                 </Text>
               )}
               {removeState.phase === 'error' && <Text color="error">{removeState.message}</Text>}

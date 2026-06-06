@@ -283,7 +283,7 @@ const issue: Command = {
   type: 'local',
   name: 'issue',
   description:
-    'Create a GitHub issue via gh CLI. Flags: --label <label>, --assignee <user>',
+    '通过 gh CLI 创建 GitHub issue. Flags: --label <label>, --assignee <user>',
   isHidden: false,
   isEnabled: () => true,
   supportsNonInteractive: true,
@@ -296,11 +296,11 @@ const issue: Command = {
         return {
           type: 'text',
           value: [
-            `Error: ${opts.parseError}`,
+            `错误：${opts.parseError}`,
             '',
-            'Usage: /issue [--label <label>] [--assignee <user>] <title>',
+            '用法：/issue [--label <label>] [--assignee <user>] <title>',
             '',
-            '  Example: /issue --label bug --assignee alice Fix login when token expires',
+            '  示例：/issue --label bug --assignee alice 修复 token 过期时的登录问题',
           ].join('\n'),
         }
       }
@@ -319,18 +319,18 @@ const issue: Command = {
         return {
           type: 'text',
           value: [
-            'Usage: /issue [--label <label>] [--assignee <user>] <title>',
+            '用法：/issue [--label <label>] [--assignee <user>] <title>',
             '',
-            `  Example: /issue Fix login bug when token expires`,
-            `  Example: /issue --label bug --assignee alice Fix crash on startup`,
+            '  示例：/issue 修复 token 过期时的登录问题',
+            `  示例：/issue --label bug --assignee alice 修复启动崩溃`,
             '',
             parsed
-              ? `Repo: ${parsed.owner}/${parsed.repo}`
-              : 'No GitHub remote detected.',
-            `New issue URL: ${urlHint}`,
+              ? `仓库：${parsed.owner}/${parsed.repo}`
+              : '未检测到 GitHub 远程仓库。',
+            `新 Issue URL：${urlHint}`,
             hasGh
-              ? '\n`gh` CLI is available — run /issue <title> to create immediately.'
-              : '\nInstall `gh` CLI (https://cli.github.com/) for one-command issue creation.',
+              ? '\n`gh` CLI 可用 — 运行 /issue <title> 立即创建。'
+              : '\n安装 `gh` CLI (https://cli.github.com/) 以一键创建 issue。',
           ].join('\n'),
         }
       }
@@ -385,23 +385,21 @@ const issue: Command = {
         const url = parsed
           ? `https://github.com/${parsed.owner}/${parsed.repo}/issues/new?title=${encodedTitle}&body=${body}${labelQuery ? '&' + labelQuery : ''}`
           : null
-        const lines: string[] = ['## File a GitHub issue', '']
+        const lines: string[] = ['## 提交 GitHub Issue', '']
         if (url) {
-          lines.push(`Open in browser:\n${url}`)
+          lines.push(`在浏览器中打开：\n${url}`)
           if (draftPath) {
             lines.push('')
-            lines.push(`Full issue body saved to:\n  \`${draftPath}\``)
+            lines.push(`完整 Issue 正文已保存到：\n  \`${draftPath}\``)
           }
         } else {
-          lines.push('No GitHub remote detected in this directory.')
-          lines.push(
-            'Run from a directory with a GitHub git remote to get a pre-filled URL.',
-          )
+          lines.push('此目录未检测到 GitHub 远程仓库。')
+          lines.push('请在有 GitHub git 远程仓库的目录中运行以获取预填充 URL。')
         }
         if (!hasGh) {
           lines.push('')
           lines.push(
-            'Install `gh` CLI (https://cli.github.com/) to create issues without a browser.',
+            '安装 `gh` CLI (https://cli.github.com/) 以无需浏览器即可创建 issue。',
           )
         }
         logEvent('tengu_issue_fallback', {
@@ -423,12 +421,12 @@ const issue: Command = {
         return {
           type: 'text',
           value: [
-            `## Issues are disabled for ${parsed.owner}/${parsed.repo}`,
+            `## ${parsed.owner}/${parsed.repo} 已禁用 Issues`,
             '',
-            'The repository has Issues disabled. You can open a Discussion instead:',
+            '该仓库已禁用 Issues。您可以改为开启 Discussion：',
             `  ${discussionUrl}`,
             '',
-            '`gh` does not support creating Discussions from the CLI without an extension.',
+            '`gh` 不支持从 CLI 创建 Discussion（需要扩展）。',
           ].join('\n'),
         }
       }
@@ -482,7 +480,7 @@ const issue: Command = {
         return {
           type: 'text',
           value: [
-            '## Issue created',
+            '## Issue 创建成功',
             '',
             `Title: ${title}`,
             `URL:   ${issueUrl}`,
@@ -503,11 +501,11 @@ const issue: Command = {
         return {
           type: 'text',
           value: [
-            '## Failed to create issue',
+            '## Issue 创建失败',
             '',
             `Error: ${msg}`,
             '',
-            'Make sure you are logged in: `gh auth login`',
+            '请确保已登录：`gh auth login`',
           ].join('\n'),
         }
       }

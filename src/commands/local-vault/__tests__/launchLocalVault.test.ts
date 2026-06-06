@@ -74,9 +74,11 @@ describe('callLocalVault', () => {
       {} as Parameters<typeof callLocalVault>[1],
       'list',
     )
-    expect(messages.some(m => m.includes('0') || m.includes('secret'))).toBe(
-      true,
-    )
+    expect(
+      messages.some(
+        m => m.includes('0') || m.includes('secret') || m.includes('密钥'),
+      ),
+    ).toBe(true)
   })
 
   test('set sub-command stores secret; onDone contains [REDACTED], not value', async () => {

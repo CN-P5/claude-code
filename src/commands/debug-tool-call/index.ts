@@ -121,8 +121,7 @@ function parseToolCallsFromLog(
 const debugToolCall: Command = {
   type: 'local',
   name: 'debug-tool-call',
-  description:
-    'Show the last N tool call pairs (use/result) from the session log',
+  description: '显示会话日志中最近 N 个工具调用对（use/result）',
   isHidden: false,
   isEnabled: () => true,
   supportsNonInteractive: true,
@@ -138,11 +137,11 @@ const debugToolCall: Command = {
         return {
           type: 'text',
           value: [
-            '## Debug Tool Calls',
+            '## 调试工具调用',
             '',
-            `Log file not found: \`${logPath}\``,
+            `未找到日志文件: \`${logPath}\``,
             '',
-            'No tool calls to show — the session log has not been created yet.',
+            '没有工具调用可显示 — 会话日志尚未创建。',
           ].join('\n'),
         }
       }
@@ -154,28 +153,28 @@ const debugToolCall: Command = {
         return {
           type: 'text',
           value: [
-            '## Debug Tool Calls',
+            '## 调试工具调用',
             '',
-            `No tool call pairs found in session log: \`${logPath}\``,
+            `会话日志中未找到工具调用对: \`${logPath}\``,
             '',
-            'Tool calls appear after the model invokes a tool and receives a result.',
+            '工具调用会在模型调用工具并收到结果后出现。',
           ].join('\n'),
         }
       }
 
       const lines: string[] = [
-        `## Last ${recent.length} Tool Call${recent.length === 1 ? '' : 's'} (of ${pairs.length} total)`,
+        `## 最近 ${recent.length} 个工具调用（共 ${pairs.length} 个）`,
         '',
       ]
 
       for (let i = 0; i < recent.length; i++) {
         const pair = recent[i]
         lines.push(`### [${pairs.length - recent.length + i + 1}] ${pair.name}`)
-        lines.push(`**Input:**`)
+        lines.push(`**输入:**`)
         lines.push('```')
         lines.push(pair.input)
         lines.push('```')
-        lines.push(`**Output:**`)
+        lines.push(`**输出:**`)
         lines.push('```')
         lines.push(pair.output)
         lines.push('```')

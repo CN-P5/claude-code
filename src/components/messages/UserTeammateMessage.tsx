@@ -54,7 +54,7 @@ function parseTeammateMessages(text: string): ParsedMessage[] {
 
 function getDisplayName(teammateId: string): string {
   if (teammateId === 'leader') {
-    return 'leader';
+    return '主控';
   }
   return teammateId;
 }
@@ -130,7 +130,7 @@ export function UserTeammateMessage({ addMargin, param: { text }, isTranscriptMo
                 <Text color="success">✓</Text>
                 <Text>
                   {' '}
-                  Completed task #{taskCompleted.taskId}
+                  完成任务 #{taskCompleted.taskId}
                   {taskCompleted.taskSubject && <Text dimColor> ({taskCompleted.taskSubject})</Text>}
                 </Text>
               </MessageResponse>

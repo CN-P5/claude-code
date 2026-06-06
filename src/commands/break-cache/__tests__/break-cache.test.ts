@@ -100,8 +100,8 @@ describe('break-cache command', () => {
 
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Cache break scheduled')
-      expect(result.value).toContain('next API call')
+      expect(result.value).toMatch(/Cache break scheduled|已安排缓存中断/)
+      expect(result.value).toMatch(/next API call|下次 API 调用/)
     }
 
     // Marker file must exist under CLAUDE_CONFIG_DIR
@@ -126,7 +126,7 @@ describe('break-cache command', () => {
     const clearResult = await invokeBreakCache('--clear')
     expect(clearResult.type).toBe('text')
     if (clearResult.type === 'text') {
-      expect(clearResult.value).toContain('cleared')
+      expect(clearResult.value).toMatch(/cleared|已清除/)
     }
     expect(existsSync(markerPath)).toBe(false)
   })
@@ -142,7 +142,7 @@ describe('break-cache command', () => {
     const result = await invokeBreakCache('--clear')
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('No cache-break marker')
+      expect(result.value).toMatch(/No cache-break marker|未设置缓存中断标记/)
     }
   })
 
@@ -160,7 +160,7 @@ describe('break-cache command', () => {
     const result = await invokeBreakCache('once')
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Cache break scheduled')
+      expect(result.value).toMatch(/Cache break scheduled|已安排缓存中断/)
     }
     const markerPath = getBreakCacheMarkerPath()
     expect(existsSync(markerPath)).toBe(true)
@@ -172,7 +172,7 @@ describe('break-cache command', () => {
     const result = await invokeBreakCache('always')
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Always-on')
+      expect(result.value).toMatch(/Always-on|已启用持久缓存中断/)
     }
     expect(existsSync(getBreakCacheAlwaysPath())).toBe(true)
     // Clean up
@@ -191,7 +191,7 @@ describe('break-cache command', () => {
     const result = await invokeBreakCache('off')
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('disabled')
+      expect(result.value).toMatch(/disabled|已禁用/)
     }
     expect(existsSync(getBreakCacheMarkerPath())).toBe(false)
     expect(existsSync(getBreakCacheAlwaysPath())).toBe(false)
@@ -201,9 +201,9 @@ describe('break-cache command', () => {
     const result = await invokeBreakCache('status')
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Break-Cache Status')
-      expect(result.value).toContain('Once marker')
-      expect(result.value).toContain('Always mode')
+      expect(result.value).toContain('Break-Cache')
+      expect(result.value).toMatch(/Once marker|Once 标记/)
+      expect(result.value).toMatch(/Always mode|Always 模式/)
     }
   })
 
@@ -211,8 +211,8 @@ describe('break-cache command', () => {
     const result = await invokeBreakCache('foobar')
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Unknown scope')
-      expect(result.value).toContain('Usage')
+      expect(result.value).toMatch(/Unknown scope|未知/)
+      expect(result.value).toMatch(/Usage|用法/)
     }
   })
 
@@ -284,7 +284,7 @@ describe('break-cache command', () => {
     )
 
     expect(node).toBeNull()
-    expect(messages.join('\n')).toContain('Break-Cache Status')
+    expect(messages.join('\n')).toMatch(/Break-Cache Status|Break-Cache 状态/)
   })
 
   test('readEvents skips malformed JSON lines (catch branch)', async () => {
@@ -303,7 +303,7 @@ describe('break-cache command', () => {
     // Status read uses readEvents internally → exercises the JSON.parse catch.
     const result = await invokeBreakCache('status')
     expect(result.type).toBe('text')
-    expect(result.value).toContain('Break-Cache Status')
+    expect(result.value).toMatch(/Break-Cache Status|Break-Cache 状态/)
   })
 
   test('breakCache (interactive): getBridgeInvocationError requires arg', async () => {

@@ -8,7 +8,6 @@ import {
   getOriginalCwd,
   getUseCoworkPlugins,
 } from '../../bootstrap/state.js'
-import { getRemoteManagedSettingsSyncFromCache } from '../../services/remoteManagedSettings/syncCacheState.js'
 import { uniq } from '../array.js'
 import { logForDebugging } from '../debug.js'
 import { logForDiagnosticsNoPII } from '../diagLogs.js'
@@ -196,6 +195,18 @@ export function parseSettingsFile(path: string): {
     settings: result.settings ? clone(result.settings) : null,
     errors: result.errors,
   }
+}
+
+/**
+ * Stub for the deleted getRemoteManagedSettingsSyncFromCache().
+ * Returns null in the fork — remote managed settings is disabled,
+ * so there are no remotely-synced settings to surface. The function
+ * is preserved (rather than inlined at call sites) so that callers
+ * that read its return value at three different policySettings
+ * resolution paths continue to compile unchanged.
+ */
+function getRemoteManagedSettingsSyncFromCache(): SettingsJson | null {
+  return null
 }
 
 function parseSettingsFileUncached(path: string): {

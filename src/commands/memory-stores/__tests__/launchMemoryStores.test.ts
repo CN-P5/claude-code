@@ -136,7 +136,7 @@ describe('callMemoryStores: list', () => {
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'list')
     expect(axiosGetMock).toHaveBeenCalledTimes(1)
-    expect(calls[0]?.[0]).toMatch(/no memory stores/i)
+    expect(calls[0]?.[0]).toMatch(/no memory stores|未找到记忆存储/i)
   })
 
   test('list with stores reports count', async () => {
@@ -146,14 +146,16 @@ describe('callMemoryStores: list', () => {
     axiosGetMock.mockResolvedValueOnce({ data: { data: stores }, status: 200 })
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, '')
-    expect(calls[0]?.[0]).toMatch(/1 memory store/)
+    expect(calls[0]?.[0]).toMatch(/1 memory store|1 个记忆存储/)
   })
 
   test('list API error → error view', async () => {
     axiosGetMock.mockRejectedValueOnce(new Error('Network error'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'list')
-    expect(calls[0]?.[0]).toMatch(/failed to list memory stores/i)
+    expect(calls[0]?.[0]).toMatch(
+      /failed to list memory stores|列出记忆存储失败/i,
+    )
   })
 })
 
@@ -173,7 +175,7 @@ describe('callMemoryStores: get', () => {
     axiosGetMock.mockRejectedValueOnce(new Error('Not found'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'get ms_missing')
-    expect(calls[0]?.[0]).toMatch(/failed to get memory store/i)
+    expect(calls[0]?.[0]).toMatch(/failed to get memory store|获取记忆存储/i)
   })
 })
 
@@ -190,14 +192,16 @@ describe('callMemoryStores: create', () => {
       Record<string, string>,
     ]
     expect(postCall[1]).toEqual({ name: 'New Store' })
-    expect(calls[0]?.[0]).toMatch(/memory store created/i)
+    expect(calls[0]?.[0]).toMatch(/memory store created|记忆存储已创建/i)
   })
 
   test('create API error → error message', async () => {
     axiosPostMock.mockRejectedValueOnce(new Error('Subscription required'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'create My Store')
-    expect(calls[0]?.[0]).toMatch(/failed to create memory store/i)
+    expect(calls[0]?.[0]).toMatch(
+      /failed to create memory store|创建记忆存储失败/i,
+    )
   })
 })
 
@@ -216,14 +220,16 @@ describe('callMemoryStores: archive', () => {
     const postCall = axiosPostMock.mock.calls[0] as unknown as [string]
     expect(postCall[0]).toContain('ms_arc')
     expect(postCall[0]).toContain('archive')
-    expect(calls[0]?.[0]).toMatch(/archived/i)
+    expect(calls[0]?.[0]).toMatch(/archived|已归档/i)
   })
 
   test('archive API error → error message', async () => {
     axiosPostMock.mockRejectedValueOnce(new Error('Not found'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'archive ms_missing')
-    expect(calls[0]?.[0]).toMatch(/failed to archive memory store/i)
+    expect(calls[0]?.[0]).toMatch(
+      /failed to archive memory store|归档记忆存储/i,
+    )
   })
 })
 
@@ -240,14 +246,14 @@ describe('callMemoryStores: memories', () => {
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'memories ms_1')
     expect(axiosGetMock).toHaveBeenCalledTimes(1)
-    expect(calls[0]?.[0]).toMatch(/1 memory/)
+    expect(calls[0]?.[0]).toMatch(/1 memory|1 条记忆/)
   })
 
   test('memories API error → error message', async () => {
     axiosGetMock.mockRejectedValueOnce(new Error('Not found'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'memories ms_missing')
-    expect(calls[0]?.[0]).toMatch(/failed to list memories/i)
+    expect(calls[0]?.[0]).toMatch(/failed to list memories|列出存储/i)
   })
 })
 
@@ -274,7 +280,7 @@ describe('callMemoryStores: create-memory', () => {
     expect(postCall[0]).toContain('ms_1')
     expect(postCall[0]).toContain('memories')
     expect(postCall[1]).toEqual({ content: 'hello world' })
-    expect(calls[0]?.[0]).toMatch(/memory created/i)
+    expect(calls[0]?.[0]).toMatch(/memory created|记忆已创建/i)
   })
 
   test('create-memory API error → error message', async () => {
@@ -285,7 +291,7 @@ describe('callMemoryStores: create-memory', () => {
       {} as never,
       'create-memory ms_1 test content',
     )
-    expect(calls[0]?.[0]).toMatch(/failed to create memory/i)
+    expect(calls[0]?.[0]).toMatch(/failed to create memory|创建记忆失败/i)
   })
 })
 
@@ -310,7 +316,7 @@ describe('callMemoryStores: get-memory', () => {
     axiosGetMock.mockRejectedValueOnce(new Error('Not found'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'get-memory ms_1 mem_missing')
-    expect(calls[0]?.[0]).toMatch(/failed to get memory/i)
+    expect(calls[0]?.[0]).toMatch(/failed to get memory|获取记忆/i)
   })
 })
 
@@ -337,7 +343,7 @@ describe('callMemoryStores: update-memory', () => {
     expect(patchCall[0]).toContain('ms_1')
     expect(patchCall[0]).toContain('mem_upd')
     expect(patchCall[1]).toEqual({ content: 'new content' })
-    expect(calls[0]?.[0]).toMatch(/updated/i)
+    expect(calls[0]?.[0]).toMatch(/updated|已更新/i)
   })
 
   test('update-memory API error → error message', async () => {
@@ -348,7 +354,7 @@ describe('callMemoryStores: update-memory', () => {
       {} as never,
       'update-memory ms_1 mem_missing new content',
     )
-    expect(calls[0]?.[0]).toMatch(/failed to update memory/i)
+    expect(calls[0]?.[0]).toMatch(/failed to update memory|更新记忆/i)
   })
 })
 
@@ -362,7 +368,7 @@ describe('callMemoryStores: delete-memory', () => {
     const deleteCall = axiosDeleteMock.mock.calls[0] as unknown as [string]
     expect(deleteCall[0]).toContain('ms_1')
     expect(deleteCall[0]).toContain('mem_del')
-    expect(calls[0]?.[0]).toMatch(/deleted/i)
+    expect(calls[0]?.[0]).toMatch(/deleted|已删除/i)
   })
 
   test('delete-memory API error → error message', async () => {
@@ -373,7 +379,7 @@ describe('callMemoryStores: delete-memory', () => {
       {} as never,
       'delete-memory ms_1 mem_missing',
     )
-    expect(calls[0]?.[0]).toMatch(/failed to delete memory/i)
+    expect(calls[0]?.[0]).toMatch(/failed to delete memory|删除记忆/i)
   })
 })
 
@@ -394,14 +400,14 @@ describe('callMemoryStores: versions', () => {
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'versions ms_1')
     expect(axiosGetMock).toHaveBeenCalledTimes(1)
-    expect(calls[0]?.[0]).toMatch(/1 version/)
+    expect(calls[0]?.[0]).toMatch(/1 version|1 个版本/)
   })
 
   test('versions API error → error message', async () => {
     axiosGetMock.mockRejectedValueOnce(new Error('Not found'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'versions ms_missing')
-    expect(calls[0]?.[0]).toMatch(/failed to list versions/i)
+    expect(calls[0]?.[0]).toMatch(/failed to list versions|列出存储/i)
   })
 })
 
@@ -421,13 +427,13 @@ describe('callMemoryStores: redact', () => {
     expect(postCall[0]).toContain('ms_1')
     expect(postCall[0]).toContain('ver_red')
     expect(postCall[0]).toContain('redact')
-    expect(calls[0]?.[0]).toMatch(/redacted/i)
+    expect(calls[0]?.[0]).toMatch(/redacted|已脱敏/i)
   })
 
   test('redact API error → error message', async () => {
     axiosPostMock.mockRejectedValueOnce(new Error('Forbidden'))
     const { onDone, calls } = makeOnDone()
     await callMemoryStores(onDone, {} as never, 'redact ms_1 ver_missing')
-    expect(calls[0]?.[0]).toMatch(/failed to redact version/i)
+    expect(calls[0]?.[0]).toMatch(/failed to redact version|脱敏版本/i)
   })
 })

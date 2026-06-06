@@ -9,7 +9,6 @@ import { type FsOperations, getFsImplementation } from './fsOperations.js'
 import { cleanupOldImageCaches } from './imageStore.js'
 import * as lockfile from './lockfile.js'
 import { logError } from './log.js'
-import { cleanupOldVersions } from './nativeInstaller/index.js'
 import { cleanupOldPastes } from './pasteStore.js'
 import { getProjectsDir } from './sessionStorage.js'
 import { getSettingsWithAllErrors } from './settings/allErrors.js'
@@ -535,10 +534,11 @@ export async function cleanupNpmCacheForAnthropicPackages(): Promise<void> {
 }
 
 /**
- * Throttled wrapper around cleanupOldVersions for recurring cleanup in long-running sessions.
+ * Throttled version cleanup for recurring cleanup in long-running sessions.
  * Uses a marker file and lock to ensure it runs at most once per 24 hours,
  * and does not block if another process is already running cleanup.
- * The regular cleanupOldVersions() should still be used for installer flows.
+ * Note: The actual version cleanup was removed (nativeInstaller deleted);
+ * this now only writes the marker file for lock coordination.
  */
 export async function cleanupOldVersionsThrottled(): Promise<void> {
   const markerPath = join(getClaudeConfigHomeDir(), '.version-cleanup')
@@ -563,7 +563,7 @@ export async function cleanupOldVersionsThrottled(): Promise<void> {
   logForDebugging('version cleanup: starting (throttled)')
 
   try {
-    await cleanupOldVersions()
+    // nativeInstaller cleanup removed — marker file only
     await fs.writeFile(markerPath, new Date().toISOString())
   } catch (error) {
     logError(error as Error)

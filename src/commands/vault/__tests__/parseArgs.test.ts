@@ -31,7 +31,7 @@ describe('parseVaultArgs', () => {
     const result = parseVaultArgs('create')
     expect(result.action).toBe('invalid')
     if (result.action === 'invalid') {
-      expect(result.reason).toMatch(/name/i)
+      expect(result.reason).toMatch(/name|名称/i)
     }
   })
 
@@ -93,7 +93,7 @@ describe('parseVaultArgs', () => {
     const result = parseVaultArgs('add-credential vault_123 MY_KEY')
     expect(result.action).toBe('invalid')
     if (result.action === 'invalid') {
-      expect(result.reason).toMatch(/value|non-empty/i)
+      expect(result.reason).toMatch(/value|non-empty|值|内容/i)
     }
   })
 
@@ -137,7 +137,7 @@ describe('parseVaultArgs', () => {
     const result = parseVaultArgs('delete vault_123')
     expect(result.action).toBe('invalid')
     if (result.action === 'invalid') {
-      expect(result.reason).toMatch(/unknown.*delete/i)
+      expect(result.reason).toMatch(/unknown.*delete|未知.*delete/i)
     }
   })
 })

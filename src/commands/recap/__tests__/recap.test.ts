@@ -151,7 +151,7 @@ describe('recap command call()', () => {
     mockRecapResult = { kind: 'aborted' }
     const result = await callFn!('', fakeContext)
     expect(result.type).toBe('text')
-    expect(result.value.toLowerCase()).toMatch(/cancel|abort/)
+    expect(result.value.toLowerCase()).toMatch(/cancel|abort|取消/)
   })
 
   test('returns error message on failed result', async () => {

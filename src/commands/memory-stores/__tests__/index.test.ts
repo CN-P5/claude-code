@@ -50,7 +50,7 @@ describe('memoryStoresCommand metadata', () => {
   })
 
   test('description mentions memory', () => {
-    expect(cmd.description?.toLowerCase()).toMatch(/memory/)
+    expect(cmd.description?.toLowerCase()).toMatch(/memory|记忆/)
   })
 
   test('load() exists and is a function', () => {

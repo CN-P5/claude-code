@@ -40,8 +40,8 @@ function SessionInfo({ onDone }: Props): React.ReactNode {
   if (!remoteSessionUrl) {
     return (
       <Pane>
-        <Text color="warning">Not in remote mode. Start with `claude --remote` to use this command.</Text>
-        <Text dimColor>(press esc to close)</Text>
+        <Text color="warning">未处于远程模式。请使用 `claude --remote` 启动后才能使用此命令。</Text>
+        <Text dimColor>（按 Esc 关闭）</Text>
       </Pane>
     );
   }
@@ -52,20 +52,20 @@ function SessionInfo({ onDone }: Props): React.ReactNode {
   return (
     <Pane>
       <Box marginBottom={1}>
-        <Text bold>Remote session</Text>
+        <Text bold>远程会话</Text>
       </Box>
 
       {/* QR Code - silently fails if generation errors, URL is still shown */}
-      {isLoading ? <Text dimColor>Generating QR code…</Text> : lines.map((line, i) => <Text key={i}>{line}</Text>)}
+      {isLoading ? <Text dimColor>正在生成二维码…</Text> : lines.map((line, i) => <Text key={i}>{line}</Text>)}
 
       {/* URL */}
       <Box marginTop={1}>
-        <Text dimColor>Open in browser: </Text>
+        <Text dimColor>在浏览器中打开：</Text>
         <Text color="ide">{remoteSessionUrl}</Text>
       </Box>
 
       <Box marginTop={1}>
-        <Text dimColor>(press esc to close)</Text>
+        <Text dimColor>（按 Esc 关闭）</Text>
       </Box>
     </Pane>
   );

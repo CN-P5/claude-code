@@ -15,7 +15,7 @@ export function TaskAssignmentDisplay({ assignment }: Props): React.ReactNode {
       <Box borderStyle="round" borderColor="cyan_FOR_SUBAGENTS_ONLY" flexDirection="column" paddingX={1} paddingY={1}>
         <Box marginBottom={1}>
           <Text color="cyan_FOR_SUBAGENTS_ONLY" bold>
-            Task #{assignment.taskId} assigned by {assignment.assignedBy}
+            任务 #{assignment.taskId}，由 {assignment.assignedBy} 分配
           </Text>
         </Box>
         <Box>
@@ -48,7 +48,7 @@ export function tryRenderTaskAssignmentMessage(content: string): React.ReactNode
 export function getTaskAssignmentSummary(content: string): string | null {
   const assignment = isTaskAssignment(content);
   if (assignment) {
-    return `[Task Assigned] #${assignment.taskId} - ${assignment.subject}`;
+    return `[任务分配] #${assignment.taskId} - ${assignment.subject}`;
   }
   return null;
 }

@@ -187,7 +187,7 @@ function ThinkbackInstaller({
           // Marketplace installed but plugin not installed - refresh to get latest plugins
           // Only refresh when needed to avoid potentially destructive git operations
           setState({ phase: 'installing-marketplace' });
-          setProgressMessage('Updating marketplace…');
+          setProgressMessage('正在更新市场…');
           logForDebugging(`Refreshing marketplace ${marketplaceName}`);
 
           await refreshMarketplace(marketplaceName, message => {
@@ -248,7 +248,7 @@ function ThinkbackInstaller({
   if (state.phase === 'error') {
     return (
       <Box flexDirection="column">
-        <Text color="error">Error: {state.message}</Text>
+        <Text color="error">错误: {state.message}</Text>
       </Box>
     );
   }
@@ -259,12 +259,12 @@ function ThinkbackInstaller({
 
   const statusMessage =
     state.phase === 'checking'
-      ? 'Checking thinkback installation…'
+      ? '正在检查 thinkback 安装…'
       : state.phase === 'installing-marketplace'
-        ? 'Installing marketplace…'
+        ? '正在安装市场…'
         : state.phase === 'enabling-plugin'
-          ? 'Enabling thinkback plugin…'
-          : 'Installing thinkback plugin…';
+          ? '正在启用 thinkback 插件…'
+          : '正在安装 thinkback 插件…';
 
   return (
     <Box flexDirection="column">
@@ -297,29 +297,29 @@ function ThinkbackMenu({
         {
           label: 'Play animation',
           value: 'play' as const,
-          description: 'Watch your year in review',
+          description: '观看你的年度回顾',
         },
         {
           label: 'Edit content',
           value: 'edit' as const,
-          description: 'Modify the animation',
+          description: '修改动画内容',
         },
         {
           label: 'Fix errors',
           value: 'fix' as const,
-          description: 'Fix validation or rendering issues',
+          description: '修复验证或渲染问题',
         },
         {
           label: 'Regenerate',
           value: 'regenerate' as const,
-          description: 'Create a new animation from scratch',
+          description: '从头创建新动画',
         },
       ]
     : [
         {
           label: "Let's go!",
           value: 'regenerate' as const,
-          description: 'Generate your personalized animation',
+          description: '生成你的个性化动画',
         },
       ];
 
@@ -345,8 +345,8 @@ function ThinkbackMenu({
 
   return (
     <Dialog
-      title="Think Back on 2025 with Claude Code"
-      subtitle="Generate your 2025 Claude Code Think Back (takes a few minutes to run)"
+      title="用 Claude Code 回顾 2025"
+      subtitle="生成你的 2025 Claude Code 年度回顾（需要几分钟时间）"
       onCancel={handleCancel}
       color="claude"
     >
@@ -354,8 +354,8 @@ function ThinkbackMenu({
         {/* Description for first-time users */}
         {!hasGenerated && (
           <Box flexDirection="column">
-            <Text>Relive your year of coding with Claude.</Text>
-            <Text dimColor>{"We'll create a personalized ASCII animation celebrating your journey."}</Text>
+            <Text>用 Claude 回顾你这一年的编程之旅。</Text>
+            <Text dimColor>{'我们将为你创建一段个性化的 ASCII 动画，庆祝这段旅程。'}</Text>
           </Box>
         )}
 
@@ -393,7 +393,7 @@ function ThinkbackFlow({
     (message: string): void => {
       setInstallError(message);
       // Call onDone with the error message so the model can continue
-      onDone(`Error with thinkback: ${message}. Try running /plugin to manually install the think-back plugin.`, {
+      onDone(`thinkback 出错: ${message}。请尝试运行 /plugin 手动安装 think-back 插件。`, {
         display: 'system',
       });
     },
@@ -408,7 +408,7 @@ function ThinkbackFlow({
           logForDebugging(`Thinkback skill directory: ${dir}`);
           setSkillDir(dir);
         } else {
-          handleError('Could not find thinkback skill directory');
+          handleError('找不到 thinkback 技能目录');
         }
       });
     }
@@ -440,8 +440,8 @@ function ThinkbackFlow({
   if (installError) {
     return (
       <Box flexDirection="column">
-        <Text color="error">Error: {installError}</Text>
-        <Text dimColor>Try running /plugin to manually install the think-back plugin.</Text>
+        <Text color="error">错误: {installError}</Text>
+        <Text dimColor>请尝试运行 /plugin 手动安装 think-back 插件。</Text>
       </Box>
     );
   }
@@ -454,7 +454,7 @@ function ThinkbackFlow({
     return (
       <Box>
         <Spinner />
-        <Text>Loading thinkback skill…</Text>
+        <Text>正在加载 thinkback 技能…</Text>
       </Box>
     );
   }

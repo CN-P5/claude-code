@@ -45,7 +45,12 @@ describe('callLocalMemory', () => {
       'list',
     )
     expect(
-      messages.some(m => m.includes('No memory stores') || m.includes('0')),
+      messages.some(
+        m =>
+          m.includes('No memory stores') ||
+          m.includes('未找到记忆存储') ||
+          m.includes('0'),
+      ),
     ).toBe(true)
   })
 
@@ -120,7 +125,12 @@ describe('callLocalMemory', () => {
       'fetch empty-s nonexistent',
     )
     expect(
-      messages.some(m => m.includes('not found') || m.includes('nonexistent')),
+      messages.some(
+        m =>
+          m.includes('not found') ||
+          m.includes('未找到') ||
+          m.includes('nonexistent'),
+      ),
     ).toBe(true)
   })
 

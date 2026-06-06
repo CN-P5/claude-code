@@ -110,19 +110,19 @@ function incrementBreakCount(): void {
 }
 
 const USAGE_TEXT = [
-  'Usage: /break-cache [scope]',
+  '用法: /break-cache [scope]',
   '',
-  '  (no args)        Schedule a one-time cache break for the next API call',
-  '  once             Same as no args',
-  '  always           Enable persistent cache-break mode (every request)',
-  '  off              Disable always mode and clear any pending marker',
-  '  --clear          Clear the pending once marker (cancel before next call)',
-  '  status           Show current break-cache status and stats',
+  '  (无参数)         为下一次 API 调用安排一次性缓存中断',
+  '  once             同无参数',
+  '  always           启用持久缓存中断模式（每次请求）',
+  '  off              禁用 always 模式并清除待处理标记',
+  '  --clear          清除待处理的 once 标记（在下次调用前取消）',
+  '  status           显示当前 break-cache 状态和统计',
   '',
-  'How it works:',
-  '  The Anthropic prompt cache keys on the system-prompt prefix hash.',
-  '  A unique nonce invalidates the hash, forcing a fresh compute.',
-  '  This is useful when you want to ensure a clean context window.',
+  '工作原理:',
+  '  Anthropic 提示缓存基于系统提示前缀哈希作为键。',
+  '  唯一的 nonce 会使哈希失效，强制重新计算。',
+  '  当你需要确保干净的上下文窗口时，这很有用。',
 ].join('\n')
 
 export async function callBreakCache(
@@ -140,12 +140,12 @@ export async function callBreakCache(
     return {
       type: 'text',
       value: [
-        '## Break-Cache Status',
+        '## Break-Cache 状态',
         '',
-        `  Once marker:    ${onceActive ? 'ACTIVE (next call will bust cache)' : 'not set'}`,
-        `  Always mode:    ${alwaysActive ? 'ON (every call busts cache)' : 'off'}`,
+        `  Once 标记:      ${onceActive ? '已激活（下次调用将中断缓存）' : '未设置'}`,
+        `  Always 模式:    ${alwaysActive ? '开启（每次调用都中断缓存）' : '关闭'}`,
         '',
-        '## Stats',
+        '## 统计',
         `  total_breaks:   ${stats.totalBreaks}`,
         `  last_break_at:  ${stats.lastBreakAt ?? 'never'}`,
       ].join('\n'),
@@ -167,8 +167,8 @@ export async function callBreakCache(
     return {
       type: 'text',
       value: cleared
-        ? 'Break-cache disabled. Removed once marker and/or always flag.'
-        : 'Break-cache was not active.',
+        ? 'Break-cache 已禁用。已移除 once 标记和/或 always 标志。'
+        : 'Break-cache 未处于活跃状态。',
     }
   }
 
@@ -178,12 +178,12 @@ export async function callBreakCache(
       unlinkSync(markerPath)
       return {
         type: 'text',
-        value: `Cache-break marker cleared.\n  \`${markerPath}\``,
+        value: `缓存中断标记已清除。\n  \`${markerPath}\``,
       }
     }
     return {
       type: 'text',
-      value: 'No cache-break marker was set.',
+      value: '未设置缓存中断标记。',
     }
   }
 
@@ -194,14 +194,14 @@ export async function callBreakCache(
     return {
       type: 'text',
       value: [
-        '## Always-on cache break enabled',
+        '## 已启用持久缓存中断',
         '',
-        `Flag written: \`${alwaysPath}\``,
+        `标志已写入: \`${alwaysPath}\``,
         '',
-        'Every API call will now append a random nonce to the system prompt,',
-        'permanently preventing prompt-cache hits for this session.',
+        '每次 API 调用现在都会在系统提示中附加一个随机 nonce，',
+        '永久阻止此会话的提示缓存命中。',
         '',
-        'To disable: `/break-cache off`',
+        '要禁用: `/break-cache off`',
       ].join('\n'),
     }
   }
@@ -216,21 +216,21 @@ export async function callBreakCache(
     return {
       type: 'text',
       value: [
-        '## Cache break scheduled',
+        '## 已安排缓存中断',
         '',
-        `Marker written: \`${markerPath}\``,
-        `Timestamp: ${timestamp}`,
+        `标记已写入: \`${markerPath}\``,
+        `时间戳: ${timestamp}`,
         '',
-        'The next API call will append a random nonce to the system prompt,',
-        'causing a cache miss. The marker is removed automatically after use.',
+        '下次 API 调用将在系统提示中附加一个随机 nonce，',
+        '导致缓存未命中。标记在使用后会自动移除。',
         '',
-        'To cancel before the next call: `/break-cache --clear`',
-        'For every call:               `/break-cache always`',
+        '在下次调用前取消: `/break-cache --clear`',
+        '每次调用都中断:         `/break-cache always`',
         '',
-        `Total breaks this session: ${stats.totalBreaks}`,
+        `本次会话总中断次数: ${stats.totalBreaks}`,
         '',
-        '_How it works: Anthropic prompt cache keys on the system-prompt prefix hash._',
-        '_A unique nonce invalidates the hash, forcing a fresh compute._',
+        '_工作原理: Anthropic 提示缓存基于系统提示前缀哈希作为键。_',
+        '_唯一的 nonce 会使哈希失效，强制重新计算。_',
       ].join('\n'),
     }
   }
@@ -246,7 +246,7 @@ const breakCache: Command = {
   type: 'local-jsx',
   name: 'break-cache',
   description:
-    'Manage prompt-cache breaking. Open actions or run: once, status, always, off',
+    '管理提示缓存中断。打开操作面板或运行: once、status、always、off',
   isHidden: false,
   isEnabled: () => !getIsNonInteractiveSession(),
   argumentHint: '[once|status|always|off|--clear]',
@@ -262,7 +262,7 @@ export const breakCacheNonInteractive: Command = {
   type: 'local',
   name: 'break-cache',
   description:
-    'Force the next (or all) API call(s) to miss prompt cache. Scopes: once, status, always, off',
+    '强制下一次（或所有）API 调用未命中提示缓存。范围: once、status、always、off',
   isHidden: false,
   isEnabled: () => getIsNonInteractiveSession(),
   supportsNonInteractive: true,

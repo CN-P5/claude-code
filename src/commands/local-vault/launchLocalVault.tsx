@@ -9,7 +9,7 @@ import { parseLocalVaultArgs } from './parseArgs.js';
 import { launchCommand } from '../_shared/launchCommand.js';
 import type { LocalJSXCommandOnDone } from '../../types/command.js';
 
-const USAGE = 'Usage: /local-vault list | set KEY VALUE | get KEY [--reveal] | delete KEY';
+const USAGE = '用法: /local-vault list | set KEY VALUE | get KEY [--reveal] | delete KEY';
 
 type LocalVaultViewProps = React.ComponentProps<typeof LocalVaultView>;
 
@@ -23,9 +23,9 @@ const ACTION_LABEL_COLUMN_WIDTH = 26;
 
 function formatKeyList(keys: string[]): string {
   if (keys.length === 0) {
-    return 'No secrets stored.';
+    return '未存储任何密钥。';
   }
-  return ['Local Vault Keys', ...keys.map(key => `- ${key}`)].join('\n');
+  return ['本地保险库密钥', ...keys.map(key => `- ${key}`)].join('\n');
 }
 
 // ── Interactive multi-step panel ───────────────────────────────────────────
@@ -50,26 +50,26 @@ const VAULT_MENU: Array<{
   label: string;
   description: string;
 }> = [
-  { kind: 'list', label: 'List', description: 'Show stored secret keys' },
+  { kind: 'list', label: 'List', description: '显示已存储的密钥' },
   {
     kind: 'set',
     label: 'Set',
-    description: 'Store a secret: KEY + VALUE (input is masked)',
+    description: '存储密钥：KEY + VALUE（输入已掩码）',
   },
   {
     kind: 'get',
     label: 'Get',
-    description: 'Look up a secret (returns masked preview)',
+    description: '查询密钥（返回掩码预览）',
   },
   {
     kind: 'delete',
     label: 'Delete',
-    description: 'Delete a stored secret by KEY',
+    description: '按 KEY 删除已存储的密钥',
   },
   {
     kind: 'about',
     label: 'About',
-    description: 'Show command syntax',
+    description: '显示命令语法',
   },
 ];
 
@@ -185,11 +185,11 @@ function LocalVaultPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.R
   const handleKeySubmit = (raw: string) => {
     const key = raw.trim();
     if (!key) {
-      setError('Key required');
+      setError('键名不能为空');
       return;
     }
     if (!isValidKey(key)) {
-      setError('Invalid key (allowed: letters/digits/._- only; no leading dot; not a Windows reserved name)');
+      setError('键名无效（仅允许字母/数字/._-；不能以 . 开头；不能是 Windows 保留名）');
       return;
     }
     if (step.kind !== 'collect-key') return;
@@ -217,7 +217,7 @@ function LocalVaultPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.R
   const handleValueSubmit = (rawValue: string) => {
     if (step.kind !== 'collect-value') return;
     if (rawValue.length === 0) {
-      setError('Secret value cannot be empty');
+      setError('密钥值不能为空');
       return;
     }
     const k = step.key;
@@ -244,9 +244,9 @@ function LocalVaultPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.R
   if (step.kind === 'menu') {
     return (
       <Dialog
-        title="Local Vault"
-        subtitle={`${VAULT_MENU.length} actions`}
-        onCancel={() => closeWith('Local vault panel dismissed')}
+        title="本地保险库"
+        subtitle={`${VAULT_MENU.length} 个操作`}
+        onCancel={() => closeWith('本地保险库面板已关闭')}
         color="background"
         hideInputGuide
       >
@@ -259,11 +259,11 @@ function LocalVaultPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.R
           ))}
           {inFlight && (
             <Box marginTop={1}>
-              <Text dimColor>Working...</Text>
+              <Text dimColor>正在处理...</Text>
             </Box>
           )}
           <Box marginTop={1}>
-            <Text dimColor>↑/↓ or 1-5 select · Enter run · Esc close</Text>
+            <Text dimColor>↑/↓ 或 1-5 选择 · Enter 运行 · Esc 关闭</Text>
           </Box>
         </Box>
       </Dialog>
@@ -272,13 +272,13 @@ function LocalVaultPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.R
 
   if (step.kind === 'confirm-delete') {
     return (
-      <Dialog title="Confirm Delete" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
+      <Dialog title="确认删除" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
         <Box flexDirection="column">
-          <Text>Delete secret "{step.key}"? This cannot be undone.</Text>
+          <Text>删除密钥 "{step.key}"？此操作不可撤销。</Text>
           <Box marginTop={1}>
-            <Text dimColor>y/Enter = delete · n/Esc = cancel</Text>
+            <Text dimColor>y/Enter = 删除 · n/Esc = 取消</Text>
           </Box>
-          {inFlight && <Text dimColor>Deleting...</Text>}
+          {inFlight && <Text dimColor>正在删除...</Text>}
         </Box>
       </Dialog>
     );
@@ -286,26 +286,26 @@ function LocalVaultPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.R
 
   if (step.kind === 'confirm-overwrite') {
     return (
-      <Dialog title="Confirm Overwrite" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
+      <Dialog title="确认覆盖" onCancel={() => transition({ kind: 'menu' })} color="warning" hideInputGuide>
         <Box flexDirection="column">
-          <Text>Secret "{step.key}" already exists. Overwrite? Old value is lost.</Text>
+          <Text>密钥 "{step.key}" 已存在。是否覆盖？原值将丢失。</Text>
           <Box marginTop={1}>
-            <Text dimColor>y/Enter = overwrite · n/Esc = cancel</Text>
+            <Text dimColor>y/Enter = 覆盖 · n/Esc = 取消</Text>
           </Box>
-          {inFlight && <Text dimColor>Storing...</Text>}
+          {inFlight && <Text dimColor>正在存储...</Text>}
         </Box>
       </Dialog>
     );
   }
 
   // collect-key / collect-value
-  const fieldLabel = step.kind === 'collect-key' ? 'KEY NAME' : 'SECRET VALUE';
-  const placeholder = step.kind === 'collect-key' ? 'e.g. github-token' : '(masked input — value never displayed)';
+  const fieldLabel = step.kind === 'collect-key' ? '键名' : '密钥值';
+  const placeholder = step.kind === 'collect-key' ? '例如: github-token' : '（已掩码输入 — 不会显示明文）';
   const onSubmit = step.kind === 'collect-key' ? handleKeySubmit : handleValueSubmit;
   const isMasked = step.kind === 'collect-value';
   return (
     <Dialog
-      title={`Local Vault · ${step.kind === 'collect-key' ? 'KEY' : 'VALUE'}`}
+      title={`本地保险库 · ${step.kind === 'collect-key' ? '键名' : '值'}`}
       onCancel={() => transition({ kind: 'menu' })}
       color="background"
       hideInputGuide
@@ -338,11 +338,11 @@ function LocalVaultPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.R
         )}
         {inFlight && (
           <Box marginTop={0}>
-            <Text dimColor>Working...</Text>
+            <Text dimColor>正在处理...</Text>
           </Box>
         )}
         <Box marginTop={1}>
-          <Text dimColor>Enter = next · Esc = back</Text>
+          <Text dimColor>Enter = 下一步 · Esc = 返回</Text>
         </Box>
       </Box>
     </Dialog>

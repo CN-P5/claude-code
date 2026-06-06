@@ -20,7 +20,7 @@ import type { ToolUseContext } from '../Tool.js'
 const monitor = {
   type: 'local-jsx',
   name: 'monitor',
-  description: 'Start a background shell monitor (Shift+Down to view)',
+  description: '启动后台 shell 监视器（Shift+Down 查看）',
   isEnabled: () => {
     if (feature('MONITOR_TOOL')) {
       return true
@@ -40,8 +40,8 @@ const monitor = {
         if (!command) {
           onDone(
             process.platform === 'win32'
-              ? 'Usage: /monitor <command>\nExample: /monitor powershell -c "while(1){git status; Start-Sleep 5}"'
-              : 'Usage: /monitor <command>\nExample: /monitor watch -n 5 git status',
+              ? '用法: /monitor <命令>\n示例: /monitor powershell -c "while(1){git status; Start-Sleep 5}"'
+              : '用法: /monitor <命令>\n示例: /monitor watch -n 5 git status',
             { display: 'system' },
           )
           return null
@@ -90,12 +90,12 @@ const monitor = {
 
           const outputFile = getTaskOutputPath(handle.taskId)
           onDone(
-            `Monitor started (${handle.taskId}). Press Shift+Down to view.\nOutput: ${outputFile}`,
+            `监视器已启动 (${handle.taskId})。按 Shift+Down 查看。\n输出: ${outputFile}`,
             { display: 'system' },
           )
         } catch (err) {
           onDone(
-            `Monitor failed: ${err instanceof Error ? err.message : String(err)}`,
+            `监视器启动失败: ${err instanceof Error ? err.message : String(err)}`,
             { display: 'system' },
           )
         }

@@ -4,6 +4,7 @@ import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
 import * as path from 'path'
 import { logEvent } from 'src/services/analytics/index.js'
+import { extractEmbeddedRgSync } from './embeddedRipgrep.js'
 import { isInBundledMode } from './bundledMode.js'
 import { logForDebugging } from './debug.js'
 import { distRoot } from './distRoot.js'
@@ -42,14 +43,17 @@ const getRipgrepConfig = memoize((): RipgrepConfig => {
     }
   }
 
-  // In bundled (native) mode, ripgrep is statically compiled into bun-internal
-  // and dispatches based on argv[0]. We spawn ourselves with argv0='rg'.
+  // In a Bun-compiled standalone executable, the ripgrep binary is
+  // embedded via `import ... with { type: 'file' }` and read at
+  // runtime from the `$bunfs/` virtual FS. The binary cannot be exec'd
+  // in place — Windows CreateProcess needs a real .exe on disk, and
+  // on Unix execve likewise requires an actual file. Extract the
+  // embedded Blob to a temp path synchronously the first time this
+  // runs; the result is memoized for the process lifetime.
   if (isInBundledMode()) {
-    return {
-      mode: 'embedded',
-      command: process.execPath,
-      args: ['--no-config'],
-      argv0: 'rg',
+    const embeddedPath = extractEmbeddedRgSync()
+    if (embeddedPath) {
+      return { mode: 'embedded', command: embeddedPath, args: [] }
     }
   }
 

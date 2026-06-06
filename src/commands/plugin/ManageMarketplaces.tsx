@@ -12,7 +12,6 @@ import { Box, Text, useInput } from '@anthropic/ink';
 import { useKeybinding, useKeybindings } from '../../keybindings/useKeybinding.js';
 import type { LoadedPlugin } from '../../types/plugin.js';
 import { count } from '../../utils/array.js';
-import { shouldSkipPluginAutoupdate } from '../../utils/config.js';
 import { errorMessage } from '../../utils/errors.js';
 import { clearAllCaches } from '../../utils/plugins/cacheUtils.js';
 import {
@@ -373,13 +372,11 @@ export function ManageMarketplaces({
       },
     ];
 
-    // Only show auto-update toggle if auto-updater is not globally disabled
-    if (!shouldSkipPluginAutoupdate()) {
-      options.push({
-        label: marketplace.autoUpdate ? 'Disable auto-update' : 'Enable auto-update',
-        value: 'toggle-auto-update',
-      });
-    }
+    // Only show auto-update toggle (auto-updater removed, always show)
+    options.push({
+      label: marketplace.autoUpdate ? 'Disable auto-update' : 'Enable auto-update',
+      value: 'toggle-auto-update',
+    });
 
     options.push({ label: 'Remove marketplace', value: 'remove' });
 
@@ -711,7 +708,7 @@ export function ManageMarketplaces({
         )}
 
         {/* Show explanatory text at the bottom when auto-update is enabled */}
-        {!isUpdating && !shouldSkipPluginAutoupdate() && selectedMarketplace.autoUpdate && (
+        {!isUpdating && selectedMarketplace.autoUpdate && (
           <Box marginTop={1}>
             <Text dimColor>
               Auto-update enabled. Claude Code will automatically update this marketplace and its installed plugins.

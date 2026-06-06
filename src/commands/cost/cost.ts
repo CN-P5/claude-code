@@ -9,10 +9,9 @@ export const call: LocalCommandCall = async () => {
 
     if (currentLimits.isUsingOverage) {
       value =
-        'You are currently using your overages to power your Claude Code usage. We will automatically switch you back to your subscription rate limits when they reset'
+        '您当前正在使用超额部分来支撑 Claude Code 用量。当订阅额度重置时，系统将自动切换回您的订阅限额'
     } else {
-      value =
-        'You are currently using your subscription to power your Claude Code usage'
+      value = '您当前正在使用订阅来支撑 Claude Code 用量'
     }
 
     if (process.env.USER_TYPE === 'ant') {

@@ -4,7 +4,7 @@ import { isSkillLearningCompiledIn } from '../../services/skillLearning/featureC
 const skillLearning = {
   type: 'local-jsx',
   name: 'skill-learning',
-  description: 'Manage skill learning (observe, analyze, evolve)',
+  description: '管理技能学习（观察、分析、进化）',
   argumentHint:
     '[start|stop|about|status|ingest|evolve|export|import|prune|promote|projects]',
   // The slash command is visible whenever the subsystem is compiled in.

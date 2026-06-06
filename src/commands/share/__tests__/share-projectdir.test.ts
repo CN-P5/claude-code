@@ -187,7 +187,7 @@ describe('share command — getTranscriptPath projectDir branch', () => {
     const result = await call('--private')
     expect(result.type).toBe('text')
     // Since log doesn't exist at projectDir/test-session-pd.jsonl → log not found
-    expect(result.value).toContain('Session log not found')
+    expect(result.value).toMatch(/Session log not found|未找到会话日志/)
     expect(result.value).toContain('test-session-pd')
   })
 

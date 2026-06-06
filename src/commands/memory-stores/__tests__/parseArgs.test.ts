@@ -31,7 +31,7 @@ describe('parseMemoryStoresArgs: get', () => {
     const result = parseMemoryStoresArgs('get')
     expect(result.action).toBe('invalid')
     if (result.action === 'invalid') {
-      expect(result.reason).toMatch(/store id/i)
+      expect(result.reason).toMatch(/store id|存储 ID/i)
     }
   })
 })
@@ -183,7 +183,7 @@ describe('parseMemoryStoresArgs: unknown sub-command', () => {
     const result = parseMemoryStoresArgs('foobar')
     expect(result.action).toBe('invalid')
     if (result.action === 'invalid') {
-      expect(result.reason).toMatch(/unknown sub-command/i)
+      expect(result.reason).toMatch(/unknown sub-command|未知子命令/i)
       expect(result.reason).toContain('foobar')
     }
   })

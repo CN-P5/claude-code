@@ -19,7 +19,6 @@ import { isSynchronizedOutputSupported } from '@anthropic/ink';
 import type { RenderOptions, Root, TextProps } from '@anthropic/ink';
 import { KeybindingSetup } from './keybindings/KeybindingProviderSetup.js';
 import { startDeferredPrefetches } from './main.js';
-import { initializeGrowthBook, resetGrowthBook } from './services/analytics/growthbook.js';
 import { isQualifiedForGrove } from './services/api/grove.js';
 import { handleMcpjsonServerApprovals } from './services/mcpServerApproval.js';
 import { AppStateProvider } from './state/AppState.js';
@@ -185,11 +184,7 @@ export async function showSetupScreens(
     // GrowthBook checks this to decide whether to include auth headers.
     setSessionTrustAccepted(true);
 
-    // Reset and reinitialize GrowthBook after trust is established.
-    // Defense for login/logout: clears any prior client so the next init
-    // picks up fresh auth headers.
-    resetGrowthBook();
-    void initializeGrowthBook();
+    // GrowthBook reset / reinit removed in the fork — both are no-ops.
 
     // Now that trust is established, prefetch system context if it wasn't already
     void getSystemContext();

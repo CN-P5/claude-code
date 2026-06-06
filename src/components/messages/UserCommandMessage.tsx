@@ -30,7 +30,7 @@ export function UserCommandMessage({ addMargin, param: { text } }: Props): React
       >
         <Text>
           <Text color="subtle">{figures.pointer} </Text>
-          <Text color="text">Skill({commandMessage})</Text>
+          <Text color="text">技能({commandMessage})</Text>
         </Text>
       </Box>
     );

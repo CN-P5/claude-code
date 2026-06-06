@@ -45,7 +45,7 @@ export function parseVaultArgs(args: string): VaultArgs {
     if (!rest) {
       return {
         action: 'invalid',
-        reason: 'create requires a vault name, e.g. create "My Work Vault"',
+        reason: 'create 需要保险库名称，例如 create "My Work Vault"',
       }
     }
     return { action: 'create', name: rest }
@@ -54,12 +54,12 @@ export function parseVaultArgs(args: string): VaultArgs {
   // ── get ───────────────────────────────────────────────────────────────────
   if (subCmd === 'get') {
     if (!rest) {
-      return { action: 'invalid', reason: 'get requires a vault id' }
+      return { action: 'invalid', reason: 'get 需要保险库 ID' }
     }
     const id = rest.split(/\s+/)[0]
     /* istanbul ignore next */
     if (!id) {
-      return { action: 'invalid', reason: 'get requires a vault id' }
+      return { action: 'invalid', reason: 'get 需要保险库 ID' }
     }
     return { action: 'get', id }
   }
@@ -67,12 +67,12 @@ export function parseVaultArgs(args: string): VaultArgs {
   // ── archive ───────────────────────────────────────────────────────────────
   if (subCmd === 'archive') {
     if (!rest) {
-      return { action: 'invalid', reason: 'archive requires a vault id' }
+      return { action: 'invalid', reason: 'archive 需要保险库 ID' }
     }
     const id = rest.split(/\s+/)[0]
     /* istanbul ignore next */
     if (!id) {
-      return { action: 'invalid', reason: 'archive requires a vault id' }
+      return { action: 'invalid', reason: 'archive 需要保险库 ID' }
     }
     return { action: 'archive', id }
   }
@@ -84,7 +84,7 @@ export function parseVaultArgs(args: string): VaultArgs {
       return {
         action: 'invalid',
         reason:
-          'add-credential requires vault_id, key, and value, e.g. add-credential vault_123 MY_API_KEY <value>',
+          'add-credential 需要 vault_id、key 和 value，例如 add-credential vault_123 MY_API_KEY <value>',
       }
     }
     const vaultId = parts[0]
@@ -93,7 +93,7 @@ export function parseVaultArgs(args: string): VaultArgs {
     if (!secret.trim()) {
       return {
         action: 'invalid',
-        reason: 'add-credential requires a non-empty credential value',
+        reason: 'add-credential 需要非空的凭据值',
       }
     }
     return {
@@ -111,7 +111,7 @@ export function parseVaultArgs(args: string): VaultArgs {
       return {
         action: 'invalid',
         reason:
-          'archive-credential requires vault_id and credential_id, e.g. archive-credential vault_123 cred_456',
+          'archive-credential 需要 vault_id 和 credential_id，例如 archive-credential vault_123 cred_456',
       }
     }
     return {
@@ -123,6 +123,6 @@ export function parseVaultArgs(args: string): VaultArgs {
 
   return {
     action: 'invalid',
-    reason: `Unknown sub-command "${subCmd}". ${USAGE}`,
+    reason: `未知子命令 "${subCmd}"。 ${USAGE}`,
   }
 }

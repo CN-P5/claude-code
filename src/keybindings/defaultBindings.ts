@@ -1,5 +1,4 @@
 import { feature } from 'bun:bundle'
-import { satisfies } from 'src/utils/semver.js'
 import { isRunningWithBun } from '../utils/bundledMode.js'
 import { getPlatform } from '../utils/platform.js'
 import type { KeybindingBlock } from './types.js'
@@ -21,8 +20,36 @@ const IMAGE_PASTE_KEY = getPlatform() === 'windows' ? 'alt+v' : 'ctrl+v'
 const SUPPORTS_TERMINAL_VT_MODE =
   getPlatform() !== 'windows' ||
   (isRunningWithBun()
-    ? satisfies(process.versions.bun, '>=1.2.23')
-    : satisfies(process.versions.node, '>=22.17.0 <23.0.0 || >=24.2.0'))
+    ? semverSatisfies(process.versions.bun, '>=1.2.23')
+    : semverSatisfies(process.versions.node, '>=22.17.0 <23.0.0 || >=24.2.0'))
+
+// Simplified semver satisfies — supports operators >=, and range expressions (a || b).
+// Only the subset needed for VT mode detection: >=X.Y.Z and compound || ranges.
+function semverSatisfies(version: string, range: string): boolean {
+  const orParts = range.split('||').map(s => s.trim())
+  return orParts.some(part => {
+    const match = part.match(/^(>=?)\s*(.+)$/)
+    if (!match) return false
+    const [, op, target] = match
+    const cmp = semverCmp(version, target)
+    if (op === '>=') return cmp >= 0
+    if (op === '>') return cmp > 0
+    return false
+  })
+}
+
+function semverCmp(a: string, b: string): number {
+  const aParts = a.split('.').map(Number)
+  const bParts = b.split('.').map(Number)
+  const len = Math.max(aParts.length, bParts.length)
+  for (let i = 0; i < len; i++) {
+    const ai = aParts[i] ?? 0
+    const bi = bParts[i] ?? 0
+    if (ai < bi) return -1
+    if (ai > bi) return 1
+  }
+  return 0
+}
 
 // Platform-specific mode cycle shortcut:
 // - Windows without VT mode: meta+m (shift+tab doesn't work reliably)

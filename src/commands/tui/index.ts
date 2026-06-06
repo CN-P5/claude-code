@@ -34,24 +34,23 @@ export function isTuiModeEnabled(): boolean {
 }
 
 const USAGE_TEXT = [
-  'Usage: /tui [subcommand]',
+  '用法: /tui [子命令]',
   '',
-  '  (no args)   Toggle flicker-free TUI mode (alternate screen buffer)',
-  '  on          Enable TUI mode',
-  '  off         Disable TUI mode',
-  '  status      Show current TUI mode state',
+  '  (无参数)     切换无闪烁 TUI 模式（备用屏幕缓冲区）',
+  '  on           启用 TUI 模式',
+  '  off          禁用 TUI 模式',
+  '  status       显示当前 TUI 模式状态',
   '',
-  'TUI mode uses the ANSI alternate screen buffer (\\x1b[?1049h) so the',
-  'Claude Code UI occupies a clean full-screen area with no scroll-back',
-  'flicker.  The setting is stored in ~/.claude/.tui-mode and takes effect',
-  'on the next session start.',
+  'TUI 模式使用 ANSI 备用屏幕缓冲区 (\\x1b[?1049h)，',
+  '使 Claude Code UI 占用干净的全屏区域，无滚动闪烁。',
+  '设置存储在 ~/.claude/.tui-mode 中，在下次会话启动时生效。',
   '',
-  'Shell-profile integration (auto-enable on every start):',
+  'Shell 配置集成（每次启动时自动启用）：',
   '  [ -f "$HOME/.claude/.tui-mode" ] && export CLAUDE_CODE_NO_FLICKER=1',
   '',
-  'Environment override:',
-  '  CLAUDE_CODE_NO_FLICKER=1   force on (overrides marker)',
-  '  CLAUDE_CODE_NO_FLICKER=0   force off (overrides marker)',
+  '环境变量覆盖：',
+  '  CLAUDE_CODE_NO_FLICKER=1   强制开启（覆盖标记文件）',
+  '  CLAUDE_CODE_NO_FLICKER=0   强制关闭（覆盖标记文件）',
 ].join('\n')
 
 function enableTui(): LocalCommandResult {
@@ -61,16 +60,16 @@ function enableTui(): LocalCommandResult {
   return {
     type: 'text',
     value: [
-      '## TUI mode enabled',
+      '## 已启用 TUI 模式',
       '',
-      `Marker written: \`${markerPath}\``,
+      `标记已写入: \`${markerPath}\``,
       '',
-      'Flicker-free alternate-screen rendering will be active on the next',
-      'session start.  Add this to your shell profile to make it permanent:',
+      '无闪烁备用屏幕渲染将在下次会话启动时激活。',
+      '将以下内容添加到你的 shell 配置文件中使其永久生效：',
       '',
       '  [ -f "$HOME/.claude/.tui-mode" ] && export CLAUDE_CODE_NO_FLICKER=1',
       '',
-      'To disable: `/tui off`',
+      '要禁用: `/tui off`',
     ].join('\n'),
   }
 }
@@ -80,21 +79,20 @@ function disableTui(): LocalCommandResult {
   if (!existsSync(markerPath)) {
     return {
       type: 'text',
-      value: 'TUI mode was not active.',
+      value: 'TUI 模式未处于活跃状态。',
     }
   }
   unlinkSync(markerPath)
   return {
     type: 'text',
     value: [
-      '## TUI mode disabled',
+      '## 已禁用 TUI 模式',
       '',
-      `Marker removed: \`${markerPath}\``,
+      `标记已移除: \`${markerPath}\``,
       '',
-      'Standard (non-alternate-screen) rendering will be used on the next',
-      'session start.',
+      '标准（非备用屏幕）渲染将在下次会话启动时使用。',
       '',
-      'To re-enable: `/tui on`',
+      '要重新启用: `/tui on`',
     ].join('\n'),
   }
 }
@@ -109,22 +107,22 @@ export async function callTui(args: string): Promise<LocalCommandResult> {
     const envVal = process.env.CLAUDE_CODE_NO_FLICKER
     let envLine: string
     if (envVal === '1' || envVal === 'true') {
-      envLine = 'CLAUDE_CODE_NO_FLICKER=1 (forced on via env var)'
+      envLine = 'CLAUDE_CODE_NO_FLICKER=1（通过环境变量强制开启）'
     } else if (envVal === '0' || envVal === 'false') {
-      envLine = 'CLAUDE_CODE_NO_FLICKER=0 (forced off via env var)'
+      envLine = 'CLAUDE_CODE_NO_FLICKER=0（通过环境变量强制关闭）'
     } else {
-      envLine = 'CLAUDE_CODE_NO_FLICKER not set'
+      envLine = 'CLAUDE_CODE_NO_FLICKER 未设置'
     }
     return {
       type: 'text',
       value: [
-        '## TUI Mode Status',
+        '## TUI 模式状态',
         '',
-        `  Marker file:  ${enabled ? 'present' : 'absent'} (\`${markerPath}\`)`,
-        `  Mode:         ${enabled ? 'enabled' : 'disabled'}`,
-        `  Env var:      ${envLine}`,
+        `  标记文件:    ${enabled ? '存在' : '不存在'} (\`${markerPath}\`)`,
+        `  模式:        ${enabled ? '已启用' : '已禁用'}`,
+        `  环境变量:    ${envLine}`,
         '',
-        'Note: changes take effect on the next session start.',
+        '注意：更改将在下次会话启动时生效。',
       ].join('\n'),
     }
   }
@@ -147,7 +145,7 @@ export async function callTui(args: string): Promise<LocalCommandResult> {
   // ── unknown subcommand ───────────────────────────────────────────────
   return {
     type: 'text',
-    value: [`Unknown subcommand: "${sub}"`, '', USAGE_TEXT].join('\n'),
+    value: [`未知子命令: "${sub}"`, '', USAGE_TEXT].join('\n'),
   }
 }
 
@@ -155,7 +153,7 @@ const tuiCommand: Command = {
   type: 'local-jsx',
   name: 'tui',
   description:
-    'Manage flicker-free TUI mode. Open actions or run: status, on, off, toggle',
+    '管理无闪烁 TUI 模式。打开操作面板或运行: status、on、off、toggle',
   isHidden: false,
   isEnabled: () => !getIsNonInteractiveSession(),
   argumentHint: '[status|on|off|toggle]',

@@ -133,17 +133,18 @@ async function main(): Promise<void> {
     const { handleWeixinCli } = await import('@claude-code-best/weixin');
     const { enableConfigs } = await import('../utils/config.js');
     const { initializeAnalyticsSink } = await import('../services/analytics/sink.js');
-    const { shutdownDatadog } = await import('../services/analytics/datadog.js');
-    const { shutdown1PEventLogging } = await import('../services/analytics/firstPartyEventLogger.js');
     const { logForDebugging } = await import('../utils/debug.js');
     const { ChannelPermissionRequestNotificationSchema } = await import('../services/mcp/channelNotification.js');
+    // shutdownDatadog / shutdown1PEventLogging were removed in the fork;
+    // pass no-op stubs so the WeixinServerDeps contract is still met.
+    const noopShutdown = async (): Promise<void> => {};
     await handleWeixinCli(
       args.slice(1),
       {
         enableConfigs,
         initializeAnalyticsSink,
-        shutdownDatadog,
-        shutdown1PEventLogging,
+        shutdownDatadog: noopShutdown,
+        shutdown1PEventLogging: noopShutdown,
         logForDebugging,
         registerPermissionHandler(server, handler) {
           server.setNotificationHandler(ChannelPermissionRequestNotificationSchema() as any, async notification =>
@@ -355,11 +356,6 @@ async function main(): Promise<void> {
         exitWithError(result.error);
       }
     }
-  }
-
-  // Redirect common update flag mistakes to the update subcommand
-  if (args.length === 1 && (args[0] === '--update' || args[0] === '--upgrade')) {
-    process.argv = [process.argv[0]!, process.argv[1]!, 'update'];
   }
 
   // --bare: set SIMPLE early so gates fire during module eval / commander

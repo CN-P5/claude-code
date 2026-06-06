@@ -45,9 +45,9 @@ export function SystemAPIErrorMessage({
         <Text color="error">{truncated ? formatted.slice(0, MAX_API_ERROR_CHARS) + '…' : formatted}</Text>
         {truncated && <CtrlOToExpand />}
         <Text dimColor>
-          Retrying in {retryInSecondsLive} {retryInSecondsLive === 1 ? 'second' : 'seconds'}… (attempt {_retryAttempt}/
-          {_maxRetries})
-          {process.env.API_TIMEOUT_MS ? ` · API_TIMEOUT_MS=${process.env.API_TIMEOUT_MS}ms, try increasing it` : ''}
+          重试等待 {retryInSecondsLive} {retryInSecondsLive === 1 ? '秒' : '秒'}…（第 {_retryAttempt} 次，共{' '}
+          {_maxRetries} 次）
+          {process.env.API_TIMEOUT_MS ? ` · API_TIMEOUT_MS=${process.env.API_TIMEOUT_MS}ms，尝试增加此值` : ''}
         </Text>
       </Box>
     </MessageResponse>

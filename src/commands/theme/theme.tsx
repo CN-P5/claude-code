@@ -17,10 +17,10 @@ function ThemePickerCommand({ onDone }: Props): React.ReactNode {
       <ThemePicker
         onThemeSelect={setting => {
           setTheme(setting);
-          onDone(`Theme set to ${setting}`);
+          onDone(`已将主题设置为 ${setting}`);
         }}
         onCancel={() => {
-          onDone('Theme picker dismissed', { display: 'system' });
+          onDone('已关闭主题选择器', { display: 'system' });
         }}
         skipExitHandling={true}
       />

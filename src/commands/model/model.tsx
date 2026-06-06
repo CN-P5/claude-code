@@ -42,7 +42,7 @@ function ModelPickerWrapper({
       action: 'cancel' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
     });
     const displayModel = renderModelLabel(mainLoopModel);
-    onDone(`Kept model as ${chalk.bold(displayModel)}`, {
+    onDone(`保持模型为 ${chalk.bold(displayModel)}`, {
       display: 'system',
     });
   }
@@ -59,7 +59,7 @@ function ModelPickerWrapper({
       mainLoopModelForSession: null,
     }));
 
-    let message = `Set model to ${chalk.bold(renderModelLabel(model))}`;
+    let message = `已将模型设置为 ${chalk.bold(renderModelLabel(model))}`;
     if (effort !== undefined) {
       message += ` with ${chalk.bold(effort)} effort`;
     }
@@ -76,7 +76,7 @@ function ModelPickerWrapper({
         wasFastModeToggledOn = false;
         // Do not update fast mode in settings since this is an automatic downgrade
       } else if (isFastModeSupportedByModel(model) && isFastModeAvailable() && isFastMode) {
-        message += ` · Fast mode ON`;
+        message += ` · 快速模式已开启`;
         wasFastModeToggledOn = true;
       }
     }
@@ -121,7 +121,7 @@ function SetModelAndClose({
   React.useEffect(() => {
     async function handleModelChange(): Promise<void> {
       if (model && !isModelAllowed(model)) {
-        onDone(`Model '${model}' is not available. Your organization restricts model selection.`, {
+        onDone(`模型 '${model}' 不可用。您的组织限制了模型选择。`, {
           display: 'system',
         });
         return;
@@ -165,12 +165,12 @@ function SetModelAndClose({
         if (valid) {
           setModel(model);
         } else {
-          onDone(error || `Model '${model}' not found`, {
+          onDone(error || `模型 '${model}' 未找到`, {
             display: 'system',
           });
         }
       } catch (error) {
-        onDone(`Failed to validate model: ${(error as Error).message}`, {
+        onDone(`验证模型失败：${(error as Error).message}`, {
           display: 'system',
         });
       }
@@ -195,18 +195,18 @@ function SetModelAndClose({
           wasFastModeToggledOn = false;
           // Do not update fast mode in settings since this is an automatic downgrade
         } else if (isFastModeSupportedByModel(modelValue) && isFastMode) {
-          message += ` · Fast mode ON`;
+          message += ` · 快速模式已开启`;
           wasFastModeToggledOn = true;
         }
       }
 
       if (isBilledAsExtraUsage(modelValue, wasFastModeToggledOn === true, isOpus1mMergeEnabled())) {
-        message += ` · Billed as extra usage`;
+        message += ` · 按超额用量计费`;
       }
 
       if (wasFastModeToggledOn === false) {
         // Fast mode was toggled off, show suffix after extra usage billing
-        message += ` · Fast mode OFF`;
+        message += ` · 快速模式已关闭`;
       }
 
       onDone(message);
@@ -239,14 +239,14 @@ function ShowModelAndClose({ onDone }: { onDone: (result?: string) => void }): R
   const mainLoopModelForSession = useAppState(s => s.mainLoopModelForSession);
   const effortValue = useAppState(s => s.effortValue);
   const displayModel = renderModelLabel(mainLoopModel);
-  const effortInfo = effortValue !== undefined ? ` (effort: ${effortValue})` : '';
+  const effortInfo = effortValue !== undefined ? `（effort: ${effortValue}）` : '';
 
   if (mainLoopModelForSession) {
     onDone(
-      `Current model: ${chalk.bold(renderModelLabel(mainLoopModelForSession))} (session override from plan mode)\nBase model: ${displayModel}${effortInfo}`,
+      `当前模型：${chalk.bold(renderModelLabel(mainLoopModelForSession))}（会话覆盖，来自计划模式）\n基础模型：${displayModel}${effortInfo}`,
     );
   } else {
-    onDone(`Current model: ${displayModel}${effortInfo}`);
+    onDone(`当前模型：${displayModel}${effortInfo}`);
   }
 
   return null;
@@ -261,7 +261,7 @@ export const call: LocalJSXCommandCall = async (onDone, _context, args) => {
     return <ShowModelAndClose onDone={onDone} />;
   }
   if (COMMON_HELP_ARGS.includes(args)) {
-    onDone('Run /model to open the model selection menu, or /model [modelName] to set the model.', {
+    onDone('运行 /model 打开模型选择菜单，或 /model [modelName] 设置模型。', {
       display: 'system',
     });
     return;
@@ -279,5 +279,5 @@ export const call: LocalJSXCommandCall = async (onDone, _context, args) => {
 
 function renderModelLabel(model: string | null): string {
   const rendered = renderDefaultModelSetting(model ?? getDefaultMainLoopModelSetting());
-  return model === null ? `${rendered} (default)` : rendered;
+  return model === null ? `${rendered}（默认）` : rendered;
 }

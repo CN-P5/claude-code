@@ -32,8 +32,8 @@ describe('skill-learning command', () => {
 
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Skill Learning status')
-      expect(result.value).toContain('Observations: 0')
+      expect(result.value).toMatch(/Skill Learning status|技能学习状态/)
+      expect(result.value).toMatch(/Observations: 0|观察: 0/)
     }
   })
 
@@ -42,7 +42,7 @@ describe('skill-learning command', () => {
 
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Promotion candidates')
+      expect(result.value).toMatch(/Promotion candidates|晋升候选/)
       expect(result.value).toContain('promote gap')
       expect(result.value).toContain('promote instinct')
     }
@@ -62,8 +62,8 @@ describe('skill-learning command', () => {
 
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Promoted gap')
-      expect(result.value).toContain('status=draft')
+      expect(result.value).toMatch(/Promoted gap|已将差距.*晋升/)
+      expect(result.value).toMatch(/status=draft|状态=draft/)
     }
   })
 
@@ -71,7 +71,7 @@ describe('skill-learning command', () => {
     const result = await call('promote gap does-not-exist', {} as any)
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('No gap found')
+      expect(result.value).toMatch(/No gap found|未找到键为/)
     }
   })
 
@@ -94,8 +94,8 @@ describe('skill-learning command', () => {
 
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Promoted instinct')
-      expect(result.value).toContain('global scope')
+      expect(result.value).toMatch(/Promoted instinct|已将直觉.*晋升/)
+      expect(result.value).toMatch(/global scope|全局作用域/)
     }
   })
 
@@ -109,7 +109,9 @@ describe('skill-learning command', () => {
     if (result.type === 'text') {
       expect(
         result.value.includes('Known project scopes') ||
-          result.value.includes('No known project scopes'),
+          result.value.includes('No known project scopes') ||
+          result.value.includes('已知项目作用域') ||
+          result.value.includes('尚无已知项目作用域'),
       ).toBe(true)
     }
   })
@@ -145,8 +147,8 @@ describe('skill-learning command', () => {
 
     expect(result.type).toBe('text')
     if (result.type === 'text') {
-      expect(result.value).toContain('Ingested')
-      expect(result.value).toContain('saved 1 instincts')
+      expect(result.value).toMatch(/Ingested|已摄取/)
+      expect(result.value).toMatch(/saved 1 instincts|保存 1 条直觉/)
     }
   })
 })

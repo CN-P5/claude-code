@@ -72,7 +72,7 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
       <ThemePicker
         onThemeSelect={handleThemeSelection}
         showIntroText={true}
-        helpText="To change this later, run /theme"
+        helpText="如需稍后更改，请运行 /theme"
         hideEscToCancel={true}
         skipExitHandling={true} // Skip exit handling as Onboarding already handles it
       />
@@ -81,7 +81,7 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
 
   const securityStep = (
     <Box flexDirection="column" gap={1} paddingLeft={1}>
-      <Text bold>Before you start, keep in mind:</Text>
+      <Text bold>开始之前，请牢记以下几点：</Text>
       <Box flexDirection="column" width={70}>
         {/**
          * OrderedList misnumbers items when rendering conditionally,
@@ -89,18 +89,19 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
          */}
         <OrderedList>
           <OrderedList.Item>
-            <Text>Always review changes before accepting</Text>
+            <Text>在接受任何更改前请仔细检查</Text>
             <Text dimColor wrap="wrap">
-              Claude can make mistakes — especially when running commands
+              Claude 也可能犯错 — 尤其是在运行命令
               <Newline />
-              or editing files. You stay in control of every action.
+              或编辑文件时。每一个动作都由您掌控。
               <Newline />
             </Text>
           </OrderedList.Item>
           <OrderedList.Item>
-            <Text>Only use Claude Code on projects you trust</Text>
+            <Text>仅在您信任的项目上使用 Claude Code</Text>
             <Text dimColor wrap="wrap">
-              Untrusted code could contain prompt injection attacks.
+              不可信的代码可能包含提示注入攻击。
+              <Newline />
               <Newline />
               <Link url="https://code.claude.com/docs/en/security" />
             </Text>
@@ -165,24 +166,20 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
       id: 'terminal-setup',
       component: (
         <Box flexDirection="column" gap={1} paddingLeft={1}>
-          <Text bold>Use Claude Code&apos;s terminal setup?</Text>
+          <Text bold>是否使用 Claude Code 的终端设置？</Text>
           <Box flexDirection="column" width={70} gap={1}>
             <Text>
-              For the optimal coding experience, enable the recommended settings
-              <Newline />
-              for your terminal:{' '}
-              {env.terminal === 'Apple_Terminal'
-                ? 'Option+Enter for newlines and visual bell'
-                : 'Shift+Enter for newlines'}
+              为获得最佳编码体验，请为您的终端启用推荐设置
+              <Newline />： {env.terminal === 'Apple_Terminal' ? 'Option+Enter 换行 + 视觉提示音' : 'Shift+Enter 换行'}
             </Text>
             <Select
               options={[
                 {
-                  label: 'Yes, use recommended settings',
+                  label: '是，使用推荐设置',
                   value: 'install',
                 },
                 {
-                  label: 'No, maybe later with /terminal-setup',
+                  label: '否，稍后用 /terminal-setup 再设置',
                   value: 'no',
                 },
               ]}
@@ -198,9 +195,7 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
               }}
               onCancel={() => goToNextStep()}
             />
-            <Text dimColor>
-              {exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>Enter to confirm · Esc to skip</>}
-            </Text>
+            <Text dimColor>{exitState.pending ? <>再次按 {exitState.keyName} 退出</> : <>回车确认 · Esc 跳过</>}</Text>
           </Box>
         </Box>
       ),
@@ -250,7 +245,7 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
         {currentStep?.component}
         {exitState.pending && (
           <Box padding={1}>
-            <Text dimColor>Press {exitState.keyName} again to exit</Text>
+            <Text dimColor>再次按 {exitState.keyName} 退出</Text>
           </Box>
         )}
       </Box>

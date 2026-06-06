@@ -4,8 +4,7 @@ import { isEnvTruthy } from '../../utils/envUtils.js'
 const compact = {
   type: 'local',
   name: 'compact',
-  description:
-    'Clear conversation history but keep a summary in context. Optional: /compact [instructions for summarization]',
+  description: '清除对话历史但保留摘要到上下文中。可选：/compact [摘要指令]',
   isEnabled: () => !isEnvTruthy(process.env.DISABLE_COMPACT),
   supportsNonInteractive: true,
   argumentHint: '<optional custom summarization instructions>',

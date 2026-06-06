@@ -59,7 +59,6 @@ import type { Message } from '../../types/message.js';
 import type { BaseTextInputProps, PromptInputMode, VimMode } from '../../types/textInputTypes.js';
 import { isAgentSwarmsEnabled } from '../../utils/agentSwarmsEnabled.js';
 import { count } from '../../utils/array.js';
-import type { AutoUpdaterResult } from '../../utils/autoUpdater.js';
 import { Cursor } from '../../utils/Cursor.js';
 import { getGlobalConfig, type PastedContent, saveGlobalConfig } from '../../utils/config.js';
 import { logForDebugging } from '../../utils/debug.js';
@@ -147,8 +146,6 @@ type Props = {
   isLoading: boolean;
   verbose: boolean;
   messages: Message[];
-  onAutoUpdaterResult: (result: AutoUpdaterResult) => void;
-  autoUpdaterResult: AutoUpdaterResult | null;
   input: string;
   onInputChange: (value: string) => void;
   mode: PromptInputMode;
@@ -233,8 +230,6 @@ function PromptInput({
   isLoading,
   verbose,
   messages,
-  onAutoUpdaterResult,
-  autoUpdaterResult,
   input,
   onInputChange,
   mode,
@@ -273,7 +268,6 @@ function PromptInput({
   // system, so treat them as a modal overlay here to stop navigation keys from
   // leaking into TextInput/footer handlers and stacking a second dialog.
   const isModalOverlayActive = useIsModalOverlayActive() || isLocalJSXCommandActive;
-  const [isAutoUpdating, setIsAutoUpdating] = useState(false);
   const [exitMessage, setExitMessage] = useState<{
     show: boolean;
     key?: string;
@@ -2525,11 +2519,7 @@ function PromptInput({
         exitMessage={exitMessage}
         vimMode={isVimModeEnabled() ? vimMode : undefined}
         mode={mode}
-        autoUpdaterResult={autoUpdaterResult}
-        isAutoUpdating={isAutoUpdating}
         verbose={verbose}
-        onAutoUpdaterResult={onAutoUpdaterResult}
-        onChangeIsUpdating={setIsAutoUpdating}
         suggestions={suggestions}
         selectedSuggestion={selectedSuggestion}
         maxColumnWidth={maxColumnWidth}
@@ -2583,13 +2573,9 @@ function PromptInput({
         >
           <Notifications
             apiKeyStatus={apiKeyStatus}
-            autoUpdaterResult={autoUpdaterResult}
             debug={debug}
-            isAutoUpdating={isAutoUpdating}
             verbose={verbose}
             messages={messages}
-            onAutoUpdaterResult={onAutoUpdaterResult}
-            onChangeIsUpdating={setIsAutoUpdating}
             ideSelection={ideSelection}
             mcpClients={mcpClients}
             isInputWrapped={isInputWrapped}

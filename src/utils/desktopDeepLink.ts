@@ -1,12 +1,10 @@
 import { readdir } from 'fs/promises'
 import { join } from 'path'
-import { coerce as semverCoerce } from 'semver'
 import { getSessionId } from '../bootstrap/state.js'
 import { getCwd } from './cwd.js'
 import { logForDebugging } from './debug.js'
 import { execFileNoThrow } from './execFileNoThrow.js'
 import { pathExists } from './file.js'
-import { gte as semverGte } from './semver.js'
 
 const MIN_DESKTOP_VERSION = '1.1.2396'
 
@@ -111,11 +109,11 @@ async function getDesktopVersion(): Promise<string | null> {
       const versions = entries
         .filter(e => e.startsWith('app-'))
         .map(e => e.slice(4))
-        .filter(v => semverCoerce(v) !== null)
+        .filter(v => parseSimpleVersion(v) !== null)
         .sort((a, b) => {
-          const ca = semverCoerce(a)!
-          const cb = semverCoerce(b)!
-          return ca.compare(cb)
+          const ca = parseSimpleVersion(a)!
+          const cb = parseSimpleVersion(b)!
+          return ca < cb ? -1 : ca > cb ? 1 : 0
         })
       return versions.length > 0 ? versions[versions.length - 1]! : null
     } catch {
@@ -153,8 +151,8 @@ export async function getDesktopInstallStatus(): Promise<DesktopInstallStatus> {
     return { status: 'ready', version: 'unknown' }
   }
 
-  const coerced = semverCoerce(version)
-  if (!coerced || !semverGte(coerced.version, MIN_DESKTOP_VERSION)) {
+  const coerced = parseSimpleVersion(version)
+  if (!coerced || !semverGte(coerced, MIN_DESKTOP_VERSION)) {
     return { status: 'version-too-old', version }
   }
 
@@ -233,4 +231,28 @@ export async function openCurrentSessionInDesktop(): Promise<{
   }
 
   return { success: true, deepLinkUrl }
+}
+
+/**
+ * Parse a version string like "1.2.3" into a comparable numeric array.
+ * Returns null if the string is not a valid semver-like version.
+ */
+function parseSimpleVersion(v: string): [number, number, number] | null {
+  const parts = v.split('.').map(Number)
+  if (parts.length < 2 || parts.some(p => isNaN(p))) return null
+  return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0]
+}
+
+/**
+ * Simplified semver greater-than-or-equal comparison.
+ */
+function semverGte(a: [number, number, number], b: string): boolean {
+  const bParts = b.split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    const ai = a[i] ?? 0
+    const bi = bParts[i] ?? 0
+    if (ai > bi) return true
+    if (ai < bi) return false
+  }
+  return true // equal
 }

@@ -61,9 +61,9 @@ function ThemeSubcommand({ onDone }: { onDone: (msg: string) => void }): React.R
         onThemeSelect={(setting: ThemeSetting) => {
           setTheme(setting);
           logEvent('tengu_onboarding_step', { stepId: meta('theme') });
-          onDone(`Theme set to ${setting}.`);
+          onDone(`主题已设置为 ${setting}。`);
         }}
-        onCancel={() => onDone('Theme picker dismissed.')}
+        onCancel={() => onDone('主题选择器已关闭。')}
         skipExitHandling={true}
       />
     </Pane>
@@ -81,22 +81,21 @@ function StatusView({
 }): React.ReactNode {
   return (
     <Box flexDirection="column" paddingLeft={1}>
-      <Text bold>Onboarding status</Text>
+      <Text bold>引导状态</Text>
       <Text>
-        - Theme: <Text bold>{theme}</Text>
+        - 主题: <Text bold>{theme}</Text>
       </Text>
       <Text>
-        - Onboarding completed:{' '}
+        - 引导已完成:{' '}
         <Text bold color={hasCompletedOnboarding ? 'success' : 'warning'}>
-          {hasCompletedOnboarding ? 'yes' : 'no'}
+          {hasCompletedOnboarding ? '是' : '否'}
         </Text>
       </Text>
       <Text>
-        - Last onboarding version: <Text bold>{lastOnboardingVersion}</Text>
+        - 最后引导版本: <Text bold>{lastOnboardingVersion}</Text>
       </Text>
       <Text dimColor>
-        Run /onboarding (no args) to re-run the full flow, or /onboarding theme | trust | model | mcp for a specific
-        step.
+        运行 /onboarding（无参数）重新运行完整流程，或 /onboarding theme | trust | model | mcp 执行特定步骤。
       </Text>
     </Box>
   );
@@ -108,7 +107,7 @@ export const callOnboarding: LocalJSXCommandCall = async (onDone, _context, args
 
   if (unknownArg !== undefined) {
     onDone(
-      `Unknown /onboarding subcommand: \`${unknownArg}\`.\n` + `Valid: full | theme | trust | model | mcp | status`,
+      `未知的 /onboarding �命令: \`${unknownArg}\`。\n` + `有效选项: full | theme | trust | model | mcp | status`,
       { display: 'system' },
     );
     return null;
@@ -123,31 +122,23 @@ export const callOnboarding: LocalJSXCommandCall = async (onDone, _context, args
       ...current,
       hasTrustDialogAccepted: false,
     }));
-    onDone(
-      'Workspace trust cleared for the current project. ' + 'The trust dialog will appear on the next `claude` launch.',
-      { display: 'system' },
-    );
+    onDone('当前项目的工作区信任已清除。' + '信任对话框将在下次 `claude` 启动时出现。', { display: 'system' });
     return null;
   }
 
   if (sub === 'model') {
-    onDone(
-      'Run `/model` to pick the AI model. ' +
-        'Onboarding does not own the model picker; this entry exists for ' +
-        'discoverability only.',
-      { display: 'system' },
-    );
+    onDone('运行 `/model` 选择 AI 模型。' + '引导不负责模型选择器；此条目仅用于' + '可发现性。', { display: 'system' });
     return null;
   }
 
   if (sub === 'mcp') {
     onDone(
-      'MCP server setup:\n' +
-        '  - `/mcp` — list configured MCP servers\n' +
-        '  - `claude mcp add <name> <command>` — add a server (in your shell)\n' +
-        '  - `claude mcp remove <name>` — remove a server\n' +
-        'Servers also load from `.mcp.json` in the workspace and from ' +
-        '`~/.claude.json` globally.',
+      'MCP 服务器设置:\n' +
+        '  - `/mcp` — 列出已配置的 MCP 服务器\n' +
+        '  - `claude mcp add <name> <command>` — 添加服务器（在 shell 中）\n' +
+        '  - `claude mcp remove <name>` — 移除服务器\n' +
+        '服务器还从工作区的 `.mcp.json` 和全局的 ' +
+        '`~/.claude.json` 加载。',
       { display: 'system' },
     );
     return null;
@@ -175,15 +166,15 @@ export const callOnboarding: LocalJSXCommandCall = async (onDone, _context, args
     hasCompletedOnboarding: false,
   }));
   onDone(
-    'Onboarding flag cleared. The full first-run setup ' +
-      '(theme, OAuth/API key, security notes, terminal-setup) ' +
-      'will run on the next `claude` launch.\n\n' +
-      'For individual steps in this session, use:\n' +
-      '  /onboarding theme   — re-pick theme inline\n' +
-      '  /onboarding trust   — re-confirm workspace trust on next launch\n' +
-      '  /onboarding model   — open /model picker\n' +
-      '  /onboarding mcp     — show MCP setup hints\n' +
-      '  /onboarding status  — show current onboarding state',
+    '引导标志已清除。完整的首次设置 ' +
+      '(主题、OAuth/API 密钥、安全说明、终端设置) ' +
+      '将在下次 `claude` 启动时运行。\n\n' +
+      '在本次会话中执行单个步骤，请使用:\n' +
+      '  /onboarding theme   — 重新选择主题\n' +
+      '  /onboarding trust   — 下次启动时重新确认工作区信任\n' +
+      '  /onboarding model   — 打开 /model 选择器\n' +
+      '  /onboarding mcp     — 显示 MCP 设置提示\n' +
+      '  /onboarding status  — 显示当前引导状态',
     { display: 'system' },
   );
   return null;

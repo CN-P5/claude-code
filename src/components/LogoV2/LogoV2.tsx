@@ -34,7 +34,6 @@ import {
 } from '../../projectOnboardingState.js';
 import { CondensedLogo } from './CondensedLogo.js';
 import { OffscreenFreeze } from '../OffscreenFreeze.js';
-import { checkForReleaseNotesSync } from '../../utils/releaseNotes.js';
 import { getDumpPromptsPath } from 'src/services/api/dumpPrompts.js';
 import { isEnvTruthy } from 'src/utils/envUtils.js';
 import { getStartupPerfLogPath, isDetailedProfilingEnabled } from 'src/utils/startupProfiler.js';
@@ -101,7 +100,7 @@ export function LogoV2(): React.ReactNode {
       ? announcements[0]
       : announcements[Math.floor(Math.random() * announcements.length)];
   });
-  const { hasReleaseNotes } = checkForReleaseNotesSync(config.lastReleaseNotesSeen);
+  const { hasReleaseNotes } = { hasReleaseNotes: changelog.length > 0 };
 
   useEffect(() => {
     const currentConfig = getGlobalConfig();

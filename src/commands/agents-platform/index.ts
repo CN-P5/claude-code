@@ -9,7 +9,7 @@ const agentsPlatform: Command = {
   type: 'local-jsx',
   name: 'agents-platform',
   aliases: ['agents', 'schedule-agent'],
-  description: 'Manage scheduled remote agents (cron-style triggers)',
+  description: '管理定时远程 Agent（定时触发器）',
   // REPL markdown renderer strips `<...>` as HTML tags — use uppercase.
   argumentHint: 'list | create CRON PROMPT | delete ID | run ID',
   get isHidden(): boolean {

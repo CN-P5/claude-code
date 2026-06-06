@@ -36,27 +36,26 @@ Skill Search 控制对话中的自动技能匹配功能。
 function getStatusText(): string {
   return [
     'Skill Search (自动技能匹配)',
-    `Status: ${isSkillSearchEnabled() ? 'enabled' : 'disabled'}`,
+    `状态: ${isSkillSearchEnabled() ? '已启用' : '已禁用'}`,
     '',
-    'When enabled, relevant skills are automatically matched and',
-    'injected into conversation context each turn.',
+    '启用后，相关技能会被自动匹配并注入到每轮对话上下文中。',
   ].join('\n');
 }
 
 async function startSkillSearch(): Promise<string> {
   if (isSkillSearchEnabled() && process.env.SKILL_SEARCH_ENABLED !== '0') {
-    return 'Skill Search: already enabled';
+    return '技能搜索: 已处于启用状态';
   }
 
   process.env.SKILL_SEARCH_ENABLED = '1';
-  const lines = ['Skill Search: enabled (SKILL_SEARCH_ENABLED=1)'];
+  const lines = ['技能搜索: 已启用（SKILL_SEARCH_ENABLED=1）'];
 
   try {
     const { clearSkillIndexCache } = await import('../../services/skillSearch/localSearch.js');
     clearSkillIndexCache();
-    lines.push('Skill index cache: cleared (will rebuild on next search)');
+    lines.push('技能索引缓存: 已清除（下次搜索时将重新构建）');
   } catch {
-    lines.push('Skill index cache: clear skipped');
+    lines.push('技能索引缓存: 跳过清除');
   }
 
   return lines.join('\n');
@@ -64,10 +63,10 @@ async function startSkillSearch(): Promise<string> {
 
 async function stopSkillSearch(): Promise<string> {
   if (!isSkillSearchEnabled()) {
-    return 'Skill Search: already disabled';
+    return '技能搜索: 已处于禁用状态';
   }
   process.env.SKILL_SEARCH_ENABLED = '0';
-  return 'Skill Search: disabled (SKILL_SEARCH_ENABLED=0)';
+  return '技能搜索: 已禁用（SKILL_SEARCH_ENABLED=0）';
 }
 
 function SkillSearchPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.ReactNode {
@@ -77,23 +76,23 @@ function SkillSearchPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
   const actions = useMemo<SkillSearchAction[]>(
     () => [
       {
-        label: 'Status',
-        description: 'Show whether automatic skill matching is active',
+        label: '状态',
+        description: '显示自动技能匹配是否处于活跃状态',
         run: () => Promise.resolve(getStatusText()),
       },
       {
-        label: 'Start',
-        description: 'Enable automatic skill matching for this session',
+        label: '启动',
+        description: '为此会话启用自动技能匹配',
         run: startSkillSearch,
       },
       {
-        label: 'Stop',
-        description: 'Disable automatic skill matching for this session',
+        label: '停止',
+        description: '为此会话禁用自动技能匹配',
         run: stopSkillSearch,
       },
       {
-        label: 'About',
-        description: 'How automatic skill matching works',
+        label: '关于',
+        description: '自动技能匹配的工作原理',
         run: () => Promise.resolve(ABOUT_TEXT),
       },
     ],
@@ -124,9 +123,9 @@ function SkillSearchPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
 
   return (
     <Dialog
-      title="Skill Search"
-      subtitle={`${actions.length} actions`}
-      onCancel={() => onDone('Skill search panel dismissed', { display: 'system' })}
+      title="技能搜索"
+      subtitle={`${actions.length} 个操作`}
+      onCancel={() => onDone('技能搜索面板已关闭', { display: 'system' })}
       color="background"
       hideInputGuide
     >
@@ -138,7 +137,7 @@ function SkillSearchPanel({ onDone }: { onDone: LocalJSXCommandOnDone }): React.
           </Box>
         ))}
         <Box marginTop={1}>
-          <Text dimColor>↑/↓ select · Enter run · Esc close</Text>
+          <Text dimColor>↑/↓ 选择 · Enter 运行 · Esc 关闭</Text>
         </Box>
       </Box>
     </Dialog>

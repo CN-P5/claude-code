@@ -16,7 +16,7 @@ const proactive = {
   bridgeSafe: true,
   type: 'local-jsx',
   name: 'proactive',
-  description: 'Toggle proactive (autonomous) mode',
+  description: '切换主动（自主）模式',
   isEnabled: () => {
     if (feature('PROACTIVE') || feature('KAIROS')) {
       return true
@@ -36,18 +36,15 @@ const proactive = {
 
         if (mod.isProactiveActive()) {
           mod.deactivateProactive()
-          onDone('Proactive mode disabled', { display: 'system' })
+          onDone('主动模式已禁用', { display: 'system' })
         } else {
           mod.activateProactive('slash_command')
-          onDone(
-            'Proactive mode enabled — model will work autonomously between ticks',
-            {
-              display: 'system',
-              metaMessages: [
-                '<system-reminder>\nProactive mode is now enabled. You will receive periodic <tick> prompts. Do useful work on each tick, or call Sleep if there is nothing to do. Do not output "still waiting" — either act or sleep.\n</system-reminder>',
-              ],
-            },
-          )
+          onDone('主动模式已启用 — 模型将在 tick 之间自主工作', {
+            display: 'system',
+            metaMessages: [
+              '<system-reminder>\n主动模式现已启用。你将收到定期的 <tick> 提示。在每次 tick 时执行有用的工作，如果没有事情可做则调用 Sleep。不要输出"仍在等待" — 要么行动，要么休眠。\n</system-reminder>',
+            ],
+          })
         }
         return null
       },

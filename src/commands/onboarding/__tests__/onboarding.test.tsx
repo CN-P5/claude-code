@@ -102,7 +102,7 @@ afterEach(() => {
 describe('onboarding command metadata', () => {
   test('has correct name and description', () => {
     expect(onboardingCommand.name).toBe('onboarding');
-    expect(onboardingCommand.description).toContain('first-run setup');
+    expect(onboardingCommand.description).toMatch(/first-run setup|首次设置/);
   });
 
   test('is local-jsx, enabled, visible, not bridge-safe', () => {
@@ -164,7 +164,7 @@ describe('callOnboarding behavior', () => {
     expect(fakeGlobalConfig.hasCompletedOnboarding).toBe(false);
     expect(calls).toHaveLength(1);
     expect(calls[0]?.opts?.display).toBe('system');
-    expect(calls[0]?.msg).toContain('Onboarding flag cleared');
+    expect(calls[0]?.msg).toMatch(/Onboarding flag cleared|引导标志已清除/);
     expect(loggedEvents.some(e => e.name === 'tengu_onboarding_step')).toBe(true);
   });
 
@@ -187,7 +187,7 @@ describe('callOnboarding behavior', () => {
     const result = await callOnboarding(fn, makeContext(), 'trust');
     expect(result).toBeNull();
     expect(fakeProjectConfig.hasTrustDialogAccepted).toBe(false);
-    expect(calls[0]?.msg).toContain('trust cleared');
+    expect(calls[0]?.msg).toMatch(/trust cleared|工作区信任已清除/);
   });
 
   test('model subcommand prints /model deferral hint', async () => {
@@ -272,7 +272,7 @@ describe('callOnboarding behavior', () => {
     const { fn, calls } = makeOnDone();
     const result = await callOnboarding(fn, makeContext(), 'bogus');
     expect(result).toBeNull();
-    expect(calls[0]?.msg).toContain('Unknown');
+    expect(calls[0]?.msg).toMatch(/Unknown|未知/);
     expect(calls[0]?.msg).toContain('bogus');
     expect(fakeGlobalConfig.hasCompletedOnboarding).toBe(true);
   });

@@ -10,7 +10,7 @@ const scheduleCommand: Command = {
   name: 'triggers',
   aliases: ['cron'],
   description:
-    'Manage scheduled remote agent triggers (cloud cron). Requires Claude Pro/Max/Team subscription.',
+    '管理定时远程代理触发器（云端 cron）。需要 Claude Pro/Max/Team 订阅。',
   // REPL markdown renderer strips `<...>` as HTML tags — use uppercase.
   argumentHint:
     'list | get ID | create CRON PROMPT | update ID FIELD VALUE | delete ID | run ID | enable ID | disable ID',

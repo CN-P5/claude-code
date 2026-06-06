@@ -8,10 +8,10 @@ import { isBgSession } from '../../utils/concurrentSessions.js';
 import { gracefulShutdown } from '../../utils/gracefulShutdown.js';
 import { getCurrentWorktreeSession } from '../../utils/worktree.js';
 
-const GOODBYE_MESSAGES = ['Goodbye!', 'See ya!', 'Bye!', 'Catch you later!'];
+const GOODBYE_MESSAGES = ['再见！', '拜拜！', '回见！', '下次见！'];
 
 function getRandomGoodbyeMessage(): string {
-  return sample(GOODBYE_MESSAGES) ?? 'Goodbye!';
+  return sample(GOODBYE_MESSAGES) ?? '再见！';
 }
 
 export async function call(onDone: LocalJSXCommandOnDone): Promise<React.ReactNode> {

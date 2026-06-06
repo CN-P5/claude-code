@@ -12,8 +12,7 @@ const call: LocalCommandCall = async () => {
 const version = {
   type: 'local',
   name: 'version',
-  description:
-    'Print the version this session is running (not what autoupdate downloaded)',
+  description: '打印此会话正在运行的版本（不是自动更新下载的版本）',
   // Was Ant-only upstream; for fork subscribers we want this universally
   // available — version info is harmless and useful for bug reports.
   isEnabled: () => true,

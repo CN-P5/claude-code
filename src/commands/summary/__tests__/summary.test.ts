@@ -86,6 +86,8 @@ describe('summary command', () => {
 
   test('handles no messages', async () => {
     const result = await callSummary({ ...baseContext, messages: [] })
-    expect((result as any).value).toBe('No messages to summarize.')
+    expect((result as any).value).toMatch(
+      /No messages to summarize|没有可摘要的消息/,
+    )
   })
 })

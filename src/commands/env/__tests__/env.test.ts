@@ -74,13 +74,13 @@ describe('env command output', () => {
   test('call() contains ## Runtime section', async () => {
     const loaded = await envCmd.load!()
     const result = await loaded.call()
-    expect(result.value).toContain('## Runtime')
+    expect(result.value).toMatch(/## Runtime|## 运行时/)
   })
 
   test('call() contains ## Environment Variables section', async () => {
     const loaded = await envCmd.load!()
     const result = await loaded.call()
-    expect(result.value).toContain('## Environment Variables')
+    expect(result.value).toMatch(/## Environment Variables|## 环境变量/)
   })
 
   test('call() contains platform info', async () => {
@@ -161,7 +161,9 @@ describe('env command output', () => {
     }
     const loaded = await envCmd.load!()
     const result = await loaded.call()
-    expect(result.value).toContain('(no recognized env vars set)')
+    expect(result.value).toMatch(
+      /\(no recognized env vars set\)|（未设置已识别的环境变量）/,
+    )
   })
 
   // ── M1 regression: KAIROS_ prefix must include underscore ──

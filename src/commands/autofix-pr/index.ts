@@ -12,7 +12,7 @@ function isAutofixPrEnabled(): boolean {
 const autofixPr: Command = {
   type: 'local-jsx',
   name: 'autofix-pr',
-  description: 'Auto-fix CI failures on a pull request',
+  description: '自动修复 PR 上的 CI 失败',
   // Avoid `<x>` in hints — REPL markdown renderer eats angle-bracketed
   // tokens as HTML tags. Uppercase placeholders survive intact.
   argumentHint: 'PR_NUMBER | stop | OWNER/REPO#N',

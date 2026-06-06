@@ -7,7 +7,7 @@ describe('/job command', () => {
     expect(cmd.name).toBe('job')
     expect(cmd.type).toBe('local-jsx')
     expect(typeof cmd.load).toBe('function')
-    expect(cmd.description).toContain('job')
+    expect(cmd.description).toMatch(/job|任务/)
   })
 
   test('job module exports call function', async () => {
